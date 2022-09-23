@@ -29,7 +29,11 @@ export const audioWorkletNodeTransform = (
   };
 
   newNode.onprocessorerror = function (err) {
-    console.error(`An error from TestAudioProcessor.process() occured: ${err}`);
+    console.error(
+      `An error from TestAudioProcessor.process() occured: ${
+        (err as ErrorEvent).message
+      }`
+    );
   };
 
   return newNode;

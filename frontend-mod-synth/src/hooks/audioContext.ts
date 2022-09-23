@@ -14,9 +14,6 @@ export const useAudioContextSetup = (): [boolean, () => void] => {
   const ctx = useRef<AudioContext | null>();
   const testNode = useRef<AudioWorkletNode | null>();
 
-  // Load AudioContext and modules
-  useEffect(() => {}, []);
-
   useEffect(() => {
     if (userGestured) {
       if (testNode.current && ctx.current) {

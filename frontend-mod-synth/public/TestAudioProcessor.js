@@ -1,5 +1,5 @@
 import "./TextEncoder.js";
-import init, { get_sine_wave, AudioManager } from "./wasm/wasm_mod_synth.js";
+import init, { AudioManager, init_wasm } from "./wasm/wasm_mod_synth.js";
 
 export class TestAudioProcessor extends AudioWorkletProcessor {
   initialized = false;
@@ -27,6 +27,7 @@ export class TestAudioProcessor extends AudioWorkletProcessor {
   onmessage(event) {
     if (event.type === "send-wasm-module") {
       init(WebAssembly.compile(event.wasmBytes)).then(() => {
+        init_wasm();
         this.manager = AudioManager.new(event.sampleRate);
 
         this.port.postMessage({ type: "wasm-module-loaded" });
