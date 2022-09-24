@@ -1,4 +1,4 @@
-use dasp::graph::{Buffer, Input, Node};
+use audio_graph::{Buffer, Input, Node};
 
 use std::cell::RefCell;
 use std::rc::Rc;

@@ -2,14 +2,14 @@ use wasm_bindgen::prelude::*;
 
 use crate::buffer::OutputBuffer;
 use crate::nodes::{OutputNode, SquareNode};
-use dasp::graph::{BoxedNode, NodeData};
+use audio_graph::Graph;
+use audio_graph::{BoxedNode, NodeData};
 use petgraph::graph::NodeIndex;
 use petgraph::{self as petgraph};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-type Graph = petgraph::graph::DiGraph<NodeData<BoxedNode>, (), u32>;
-type Processor = dasp::graph::Processor<Graph>;
+type Processor = audio_graph::Processor;
 
 #[wasm_bindgen]
 pub struct AudioManager {
@@ -28,10 +28,10 @@ impl AudioManager {
         let output_buffer = Rc::new(RefCell::new(OutputBuffer::new()));
 
         let square_node = SquareNode::new(sample_rate);
-        let square_node_idx = graph.add_node(NodeData::new1(BoxedNode::new(square_node)));
+        let square_node_idx = graph.add_node(NodeData::boxed1(square_node));
 
         let output_node = OutputNode::new(output_buffer.clone());
-        let output_node_idx = graph.add_node(NodeData::new1(BoxedNode::new(output_node)));
+        let output_node_idx = graph.add_node(NodeData::boxed1(output_node));
 
         graph.add_edge(square_node_idx, output_node_idx, ());
 

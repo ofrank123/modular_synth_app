@@ -12,8 +12,9 @@ default = ["console_error_panic_hook"]
 
 [dependencies]
 wasm-bindgen = "0.2.63"
-dasp = { git="https://github.com/rustaudio/dasp", version = "0.11.0", features = ["all"] }
+dasp = { version = "0.11.0", features = ["all"] }
 petgraph = "0.5"
+audio_graph = { path = "../audio_graph" }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires

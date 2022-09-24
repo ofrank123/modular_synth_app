@@ -1,4 +1,4 @@
-use dasp::graph::{Buffer, Input, Node};
+use audio_graph::{Buffer, Input, Node};
 use dasp::{signal, Signal};
 
 pub struct SquareNode {
