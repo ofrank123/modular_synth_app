@@ -28,10 +28,10 @@ impl AudioManager {
         let output_buffer = Rc::new(RefCell::new(OutputBuffer::new()));
 
         let square_node = SquareNode::new(sample_rate);
-        let square_node_idx = graph.add_node(NodeData::boxed1(square_node));
+        let square_node_idx = graph.add_node(NodeData::boxed(square_node));
 
         let output_node = OutputNode::new(output_buffer.clone());
-        let output_node_idx = graph.add_node(NodeData::boxed1(output_node));
+        let output_node_idx = graph.add_node(NodeData::boxed(output_node));
 
         graph.add_edge(square_node_idx, output_node_idx, ());
 

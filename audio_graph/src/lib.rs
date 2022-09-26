@@ -123,12 +123,14 @@
 //! *TODO: Adding support for `no_std` is pending the addition of support for `no_std` in petgraph.
 //! See https://github.com/petgraph/petgraph/pull/238.
 
+use std::collections::HashMap;
+
 pub use buffer::Buffer;
+use node::OutputPorts;
 pub use node::{Input, Node};
-use petgraph::data::{DataMap, DataMapMut};
+use petgraph::data::DataMap;
 use petgraph::visit::{
-    Data, DfsPostOrder, GraphBase, IntoNeighborsDirected, NodeCount, NodeIndexable, Reversed,
-    Visitable,
+    DfsPostOrder, GraphBase, IntoNeighborsDirected, NodeCount, NodeIndexable, Reversed, Visitable,
 };
 use petgraph::{Incoming, Outgoing};
 
@@ -178,13 +180,13 @@ pub mod node;
 ///     p.process(&mut g, n_id);
 /// }
 /// ```
-pub type Graph = petgraph::graph::DiGraph<NodeData<BoxedNode>, (), u32>;
+pub type Graph = petgraph::graph::DiGraph<NodeData<BoxedNode>, (u32, u32), u32>;
 
 pub struct Processor {
     // State related to the traversal of the audio graph starting from the output node.
     dfs_post_order: DfsPostOrder<<Graph as GraphBase>::NodeId, <Graph as Visitable>::Map>,
     // Solely for collecting the inputs of a node in order to apply its `Node::process` method.
-    inputs: Vec<node::Input>,
+    inputs: HashMap<u32, node::Input>,
 }
 
 /// For use as the node weight within a dasp graph. Contains the node and its buffers.
@@ -192,12 +194,7 @@ pub struct Processor {
 /// For a graph to be compatible with a graph **Processor**, its node weights must be of type
 /// `NodeData<T>`, where `T` is some type that implements the `Node` trait.
 pub struct NodeData<T: ?Sized> {
-    /// The buffers to which the `node` writes audio data during a call to its `process` method.
-    ///
-    /// Generally, each buffer stored within `buffers` corresponds to a unique audio channel. E.g.
-    /// a node processing mono data would store one buffer, a node processing stereo data would
-    /// store two, and so on.
-    pub buffers: Vec<Buffer>,
+    pub output_ports: OutputPorts,
     pub node: T,
 }
 
@@ -212,7 +209,7 @@ impl Processor {
     {
         let mut dfs_post_order = DfsPostOrder::default();
         dfs_post_order.stack = Vec::with_capacity(max_nodes);
-        let inputs = Vec::with_capacity(max_nodes);
+        let inputs = HashMap::with_capacity(max_nodes);
         Self {
             dfs_post_order,
             inputs,
@@ -242,65 +239,27 @@ impl Processor {
 
 impl<T> NodeData<T> {
     /// Construct a new **NodeData** from an instance of its node type and buffers.
-    pub fn new(node: T, buffers: Vec<Buffer>) -> Self {
-        NodeData { node, buffers }
-    }
-
-    /// Creates a new **NodeData** with a single buffer.
-    pub fn new1(node: T) -> Self {
-        Self::new(node, vec![Buffer::SILENT])
-    }
-
-    /// Creates a new **NodeData** with two buffers.
-    pub fn new2(node: T) -> Self {
-        Self::new(node, vec![Buffer::SILENT; 2])
+    pub fn new(node: T, output_ports: HashMap<u32, Vec<Buffer>>) -> Self {
+        NodeData { node, output_ports }
     }
 }
 
 impl NodeData<BoxedNode> {
     /// The same as **new**, but boxes the given node data before storing it.
-    pub fn boxed<T>(node: T, buffers: Vec<Buffer>) -> Self
+    pub fn boxed<T>(node: T) -> Self
     where
         T: 'static + Node,
     {
-        NodeData::new(BoxedNode(Box::new(node)), buffers)
-    }
+        let mut ports = HashMap::new();
+        ports.insert(0, vec![Buffer::SILENT]);
 
-    /// The same as **new1**, but boxes the given node data before storing it.
-    pub fn boxed1<T>(node: T) -> Self
-    where
-        T: 'static + Node,
-    {
-        Self::boxed(node, vec![Buffer::SILENT])
-    }
-
-    /// The same as **new2**, but boxes the given node data before storing it.
-    pub fn boxed2<T>(node: T) -> Self
-    where
-        T: 'static + Node,
-    {
-        Self::boxed(node, vec![Buffer::SILENT, Buffer::SILENT])
+        NodeData::new(BoxedNode(Box::new(node)), ports)
     }
 }
 
-/// Process audio through the subgraph ending at the node with the given ID.
-///
-/// Specifically, this traverses nodes in depth-first-search *post* order where the edges of
-/// the graph are reversed. This is equivalent to the topological order of all nodes that are
-/// connected to the inputs of the given `node`. This ensures that all inputs of each node are
-/// visited before the node itself.
-///
-/// The `Node::process` method is called on each node as they are visited in the traversal.
-///
-/// Upon returning, the buffers of each visited node will contain the audio processed by their
-/// respective nodes.
-///
-/// Supports all graphs that implement the necessary petgraph traits and whose nodes are of
-/// type `NodeData<T>` where `T` implements the `Node` trait.
-///
-/// **Panics** if there is no node for the given index.
+pub const NO_NODE: &str = "no node exists for the given index";
+
 pub fn process(processor: &mut Processor, graph: &mut Graph, node: <Graph as GraphBase>::NodeId) {
-    const NO_NODE: &str = "no node exists for the given index";
     processor.dfs_post_order.reset(Reversed(&*graph));
     processor.dfs_post_order.move_to(node);
     while let Some(n) = processor.dfs_post_order.next(Reversed(&*graph)) {
@@ -312,10 +271,17 @@ pub fn process(processor: &mut Processor, graph: &mut Graph, node: <Graph as Gra
                 continue;
             }
 
-            // let edges = graph.edges_connecting(in_n, n).collect();
             let input_container = graph.node_weight(in_n).expect(NO_NODE);
-            let input = node::Input::new(&input_container.buffers);
-            processor.inputs.push(input);
+            // Loop through edges connecting the two nodes
+            for (out_port, in_port) in graph.edges_connecting(in_n, n).map(|e| e.weight()) {
+                match input_container.output_ports.get(out_port) {
+                    Some(x) => {
+                        let input = node::Input::new(x);
+                        processor.inputs.insert(*in_port, input);
+                    }
+                    None => {} // No output port on in_n
+                }
+            }
         }
         // Here we deference our raw pointer to the `NodeData`. The only references to the graph at
         // this point in time are the input references and the node itself. We know that the input
@@ -324,7 +290,7 @@ pub fn process(processor: &mut Processor, graph: &mut Graph, node: <Graph as Gra
         unsafe {
             (*data)
                 .node
-                .process(&processor.inputs, &mut (*data).buffers);
+                .process(&processor.inputs, &mut (*data).output_ports);
         }
     }
 }

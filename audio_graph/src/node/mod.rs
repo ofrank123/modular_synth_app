@@ -6,86 +6,41 @@ pub use boxed::{BoxedNode, BoxedNodeSend};
 pub use delay::Delay;
 pub use graph::GraphNode;
 pub use pass::Pass;
-pub use sum::{Sum, SumBuffers};
 
 mod boxed;
 mod delay;
 mod graph;
 mod pass;
-mod signal;
-mod sum;
-
-/// The `Node` type used within a dasp graph must implement this trait.
-///
-/// The implementation describes how audio is processed from its inputs to outputs.
-///
-/// - Audio **sources** or **inputs** may simply ignore the `inputs` field and write their source
-///   data directly to the `output` buffers.
-/// - Audio **processors**, **effects** or **sinks** may read from their `inputs`, apply some
-///   custom processing and write the result to their `output` buffers.
-///
-/// Multiple `Node` implementations are provided and can be enabled or disabled via [their
-/// associated features](../index.html#optional-features).
-///
-/// # Example
-///
-/// The following demonstrates how to implement a simple node that sums each of its inputs onto the
-/// output.
-///
-/// ```rust
-/// use dasp_graph::{Buffer, Input, Node};
-///
-/// // Our new `Node` type.
-/// pub struct Sum;
-///
-/// // Implement the `Node` trait for our new type.
-/// # #[cfg(feature = "dasp_slice")]
-/// impl Node for Sum {
-///     fn process(&mut self, inputs: &[Input], output: &mut [Buffer]) {
-///         // Fill the output with silence.
-///         for out_buffer in output.iter_mut() {
-///             out_buffer.silence();
-///         }
-///         // Sum the inputs onto the output.
-///         for (channel, out_buffer) in output.iter_mut().enumerate() {
-///             for input in inputs {
-///                 let in_buffers = input.buffers();
-///                 if let Some(in_buffer) = in_buffers.get(channel) {
-///                     dasp_slice::add_in_place(out_buffer, in_buffer);
-///                 }
-///             }
-///         }
-///     }
-/// }
-/// ```
 
 // Map from input port number to Input on that port
-type InputMap = HashMap<u32, Input>;
+pub type InputPorts = HashMap<u32, Input>;
 // Map from output port number to buffers being sent out on that port
-type OutputMap = HashMap<u32, Vec<Buffer>>;
+pub type OutputPorts = HashMap<u32, Vec<Buffer>>;
 
-pub trait Node {
-    /// Process some audio given a list of the node's `inputs` and write the result to the `output`
-    /// buffers.
-    ///
-    /// `inputs` represents a list of all nodes with direct edges toward this node. Each
-    /// [`Input`](./struct.Input.html) within the list can providee a reference to the output
-    /// buffers of their corresponding node.
-    ///
-    /// The `inputs` may be ignored if the implementation is for a source node. Alternatively, if
-    /// the `Node` only supports a specific number of `input`s, it is up to the user to decide how
-    /// they wish to enforce this or provide feedback at the time of graph and edge creation.
-    ///
-    /// This `process` method is called by the [`Processor`](../struct.Processor.html) as it
-    /// traverses the graph during audio rendering.
-    fn process(&mut self, inputs: &InputMap, output: &mut OutputMap);
+#[derive(PartialEq, Eq, Hash)]
+pub enum PortType {
+    In,
+    Out,
 }
 
-/// A reference to another node that is an input to the current node.
-///
-/// *TODO: It may be useful to provide some information that can uniquely identify the input node.
-/// This could be useful to allow to distinguish between side-chained and regular inputs for
-/// example.*
+pub const NO_PORT: &'static str = "Unexpected port number encountered";
+
+#[macro_export]
+macro_rules! port_panic {
+    ($a:expr,$b:expr) => {{
+        match ($a, $b) {
+            (PortType::In, p) => panic!("No such input port, {}", p),
+            (PortType::Out, p) => panic!("No such output port, {}", p),
+        }
+    }};
+}
+
+pub trait Node {
+    fn get_output_ports(&self) -> &[u32];
+    fn get_port(&self, name: &str, port_type: PortType) -> u32;
+    fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts);
+}
+
 pub struct Input {
     buffers_ptr: *const Buffer,
     buffers_len: usize,
@@ -126,7 +81,13 @@ impl<'a, T> Node for &'a mut T
 where
     T: Node + ?Sized,
 {
-    fn process(&mut self, inputs: &InputMap, output: &mut OutputMap) {
+    fn get_output_ports(&self) -> &[u32] {
+        (**self).get_output_ports()
+    }
+    fn get_port(&self, name: &str, port_type: PortType) -> u32 {
+        (**self).get_port(name, port_type)
+    }
+    fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts) {
         (**self).process(inputs, output)
     }
 }
@@ -135,25 +96,13 @@ impl<T> Node for Box<T>
 where
     T: Node + ?Sized,
 {
-    fn process(&mut self, inputs: &InputMap, output: &mut OutputMap) {
+    fn get_output_ports(&self) -> &[u32] {
+        (**self).get_output_ports()
+    }
+    fn get_port(&self, name: &str, port_type: PortType) -> u32 {
+        (**self).get_port(name, port_type)
+    }
+    fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts) {
         (**self).process(inputs, output)
-    }
-}
-
-impl Node for dyn Fn(&InputMap, &mut OutputMap) {
-    fn process(&mut self, inputs: &InputMap, output: &mut OutputMap) {
-        (*self)(inputs, output)
-    }
-}
-
-impl Node for dyn FnMut(&InputMap, &mut OutputMap) {
-    fn process(&mut self, inputs: &InputMap, output: &mut OutputMap) {
-        (*self)(inputs, output)
-    }
-}
-
-impl Node for fn(&InputMap, &mut OutputMap) {
-    fn process(&mut self, inputs: &InputMap, output: &mut OutputMap) {
-        (*self)(inputs, output)
     }
 }

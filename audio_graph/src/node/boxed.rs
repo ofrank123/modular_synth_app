@@ -1,6 +1,8 @@
-use crate::{Buffer, Input, Node};
+use crate::Node;
 use core::fmt;
 use core::ops::{Deref, DerefMut};
+
+use super::{InputPorts, OutputPorts, PortType};
 
 /// A wrapper around a `Box<dyn Node>`.
 ///
@@ -43,13 +45,25 @@ impl BoxedNodeSend {
 }
 
 impl Node for BoxedNode {
-    fn process(&mut self, inputs: &[Input], output: &mut [Buffer]) {
+    fn get_output_ports(&self) -> &[u32] {
+        self.0.get_output_ports()
+    }
+    fn get_port(&self, name: &str, port_type: PortType) -> u32 {
+        self.0.get_port(name, port_type)
+    }
+    fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts) {
         self.0.process(inputs, output)
     }
 }
 
 impl Node for BoxedNodeSend {
-    fn process(&mut self, inputs: &[Input], output: &mut [Buffer]) {
+    fn get_output_ports(&self) -> &[u32] {
+        self.0.get_output_ports()
+    }
+    fn get_port(&self, name: &str, port_type: PortType) -> u32 {
+        self.0.get_port(name, port_type)
+    }
+    fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts) {
         self.0.process(inputs, output)
     }
 }
