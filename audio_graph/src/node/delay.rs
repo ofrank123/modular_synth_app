@@ -1,5 +1,5 @@
 use crate::{port_panic, Node};
-use dasp_ring_buffer as ring_buffer;
+use dasp::ring_buffer;
 
 use super::{InputPorts, OutputPorts, PortType, NO_PORT};
 

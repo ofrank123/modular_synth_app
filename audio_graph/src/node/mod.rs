@@ -2,15 +2,19 @@ use crate::buffer::Buffer;
 use core::fmt;
 use std::collections::HashMap;
 
-pub use boxed::{BoxedNode, BoxedNodeSend};
-pub use delay::Delay;
-pub use graph::GraphNode;
-pub use pass::Pass;
-
 mod boxed;
 mod delay;
 mod graph;
+mod oscillator;
+mod output;
 mod pass;
+
+pub use boxed::{BoxedNode, BoxedNodeSend};
+pub use delay::Delay;
+pub use graph::GraphNode;
+pub use oscillator::OscNode;
+pub use output::OutputSink;
+pub use pass::Pass;
 
 // Map from input port number to Input on that port
 pub type InputPorts = HashMap<u32, Input>;

@@ -137,28 +137,6 @@ function getUint8Memory0() {
 function getStringFromWasm0(ptr, len) {
     return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
 }
-
-let cachedInt32Memory0 = new Int32Array();
-
-function getInt32Memory0() {
-    if (cachedInt32Memory0.byteLength === 0) {
-        cachedInt32Memory0 = new Int32Array(wasm.memory.buffer);
-    }
-    return cachedInt32Memory0;
-}
-
-let cachedFloat32Memory0 = new Float32Array();
-
-function getFloat32Memory0() {
-    if (cachedFloat32Memory0.byteLength === 0) {
-        cachedFloat32Memory0 = new Float32Array(wasm.memory.buffer);
-    }
-    return cachedFloat32Memory0;
-}
-
-function getArrayF32FromWasm0(ptr, len) {
-    return getFloat32Memory0().subarray(ptr / 4, ptr / 4 + len);
-}
 /**
 */
 function init_wasm() {
@@ -228,6 +206,15 @@ function passStringToWasm0(arg, malloc, realloc) {
     WASM_VECTOR_LEN = offset;
     return ptr;
 }
+
+let cachedInt32Memory0 = new Int32Array();
+
+function getInt32Memory0() {
+    if (cachedInt32Memory0.byteLength === 0) {
+        cachedInt32Memory0 = new Int32Array(wasm.memory.buffer);
+    }
+    return cachedInt32Memory0;
+}
 /**
 */
 class AudioManager {
@@ -259,21 +246,16 @@ class AudioManager {
         return AudioManager.__wrap(ret);
     }
     /**
-    * @param {number} n_samples
-    * @returns {Float32Array}
+    * @returns {number}
     */
-    get_samples(n_samples) {
-        try {
-            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.audiomanager_get_samples(retptr, this.ptr, n_samples);
-            var r0 = getInt32Memory0()[retptr / 4 + 0];
-            var r1 = getInt32Memory0()[retptr / 4 + 1];
-            var v0 = getArrayF32FromWasm0(r0, r1).slice();
-            wasm.__wbindgen_free(r0, r1 * 4);
-            return v0;
-        } finally {
-            wasm.__wbindgen_add_to_stack_pointer(16);
-        }
+    get_output_ptr() {
+        const ret = wasm.audiomanager_get_output_ptr(this.ptr);
+        return ret;
+    }
+    /**
+    */
+    process() {
+        wasm.audiomanager_process(this.ptr);
     }
 }
 
@@ -342,7 +324,6 @@ function getImports() {
 function finalizeInit(instance, module) {
     wasm = instance.exports;
     init.__wbindgen_wasm_module = module;
-    cachedFloat32Memory0 = new Float32Array();
     cachedInt32Memory0 = new Int32Array();
     cachedUint8Memory0 = new Uint8Array();
 
@@ -367,7 +348,6 @@ async function init(input) {
 
 class TestAudioProcessor extends AudioWorkletProcessor {
   initialized = false;
-  manager = undefined;
 
   static get parameterDescriptors() {
     return [
@@ -390,10 +370,16 @@ class TestAudioProcessor extends AudioWorkletProcessor {
 
   onmessage(event) {
     if (event.type === "send-wasm-module") {
-      init(WebAssembly.compile(event.wasmBytes)).then(() => {
+      init(WebAssembly.compile(event.wasmBytes)).then((result) => {
         init_wasm();
+        this.memory = result.memory;
         this.manager = AudioManager.new(event.sampleRate);
-
+        this.buffer_ptr = this.manager.get_output_ptr();
+        this.buffer = new Float32Array(
+          this.memory.buffer,
+          this.buffer_ptr,
+          128
+        );
         this.port.postMessage({ type: "wasm-module-loaded" });
       });
     } else if (event.type === "begin-audio") {
@@ -403,10 +389,10 @@ class TestAudioProcessor extends AudioWorkletProcessor {
 
   process(_inputs, outputs, parameters) {
     if (this.initialized) {
+      this.manager.process();
       outputs[0].forEach((channel) => {
-        const samples = this.manager.get_samples(channel.length);
         for (let i = 0; i < channel.length; i++) {
-          channel[i] = samples[i];
+          channel[i] = this.buffer[i];
         }
       });
     }

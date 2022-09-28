@@ -3,7 +3,6 @@ import init, { AudioManager, init_wasm } from "./wasm/wasm_mod_synth.js";
 
 export class TestAudioProcessor extends AudioWorkletProcessor {
   initialized = false;
-  manager = undefined;
 
   static get parameterDescriptors() {
     return [
@@ -26,10 +25,16 @@ export class TestAudioProcessor extends AudioWorkletProcessor {
 
   onmessage(event) {
     if (event.type === "send-wasm-module") {
-      init(WebAssembly.compile(event.wasmBytes)).then(() => {
+      init(WebAssembly.compile(event.wasmBytes)).then((result) => {
         init_wasm();
+        this.memory = result.memory;
         this.manager = AudioManager.new(event.sampleRate);
-
+        this.buffer_ptr = this.manager.get_output_ptr();
+        this.buffer = new Float32Array(
+          this.memory.buffer,
+          this.buffer_ptr,
+          128
+        );
         this.port.postMessage({ type: "wasm-module-loaded" });
       });
     } else if (event.type === "begin-audio") {
@@ -39,10 +44,10 @@ export class TestAudioProcessor extends AudioWorkletProcessor {
 
   process(_inputs, outputs, parameters) {
     if (this.initialized) {
+      this.manager.process();
       outputs[0].forEach((channel) => {
-        const samples = this.manager.get_samples(channel.length);
         for (let i = 0; i < channel.length; i++) {
-          channel[i] = samples[i];
+          channel[i] = this.buffer[i];
         }
       });
     }

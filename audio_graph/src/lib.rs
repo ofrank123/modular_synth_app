@@ -126,8 +126,8 @@
 use std::collections::HashMap;
 
 pub use buffer::Buffer;
-use node::OutputPorts;
 pub use node::{Input, Node};
+use node::{OutputPorts, PortType};
 use petgraph::data::DataMap;
 use petgraph::visit::{
     DfsPostOrder, GraphBase, IntoNeighborsDirected, NodeCount, NodeIndexable, Reversed, Visitable,
@@ -138,6 +138,11 @@ pub use node::{BoxedNode, BoxedNodeSend};
 
 mod buffer;
 pub mod node;
+
+#[macro_export]
+macro_rules! console_log {
+    ($($t:tt)*) => (web_sys::console::log_1(&format!($($t)*).into()))
+}
 
 /// State related to the processing of an audio graph of type `G`.
 ///
@@ -181,6 +186,28 @@ pub mod node;
 /// }
 /// ```
 pub type Graph = petgraph::graph::DiGraph<NodeData<BoxedNode>, (u32, u32), u32>;
+
+type Port<'a> = (<Graph as GraphBase>::NodeId, &'a str);
+
+/// Helper to add edges to graph using node idx and port name
+pub fn add_graph_edge(
+    graph: &mut Graph,
+    (output_id, output_port): Port,
+    (input_id, input_port): Port,
+) {
+    let output_port_id = graph
+        .node_weight(output_id)
+        .expect(NO_NODE)
+        .node
+        .get_port(output_port, PortType::Out);
+    let input_port_id = graph
+        .node_weight(input_id)
+        .expect(NO_NODE)
+        .node
+        .get_port(input_port, PortType::In);
+
+    graph.add_edge(output_id, input_id, (output_port_id, input_port_id));
+}
 
 pub struct Processor {
     // State related to the traversal of the audio graph starting from the output node.
