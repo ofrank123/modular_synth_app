@@ -1,4 +1,4 @@
-use crate::{console_log, port_panic, Buffer, Node};
+use crate::{port_panic, Buffer, Node};
 use dasp::{signal, Signal};
 
 use super::{InputPorts, OutputPorts, PortType, NO_PORT};
@@ -12,12 +12,16 @@ impl OscNode {
 
     pub fn new(sample_rate: f64) -> Self {
         let signal = Box::new(
-            signal::rate(sample_rate).const_hz(440.0).sine().add_amp(
-                signal::rate(sample_rate)
-                    .const_hz(880.0)
-                    .sine()
-                    .scale_amp(0.5),
-            ),
+            signal::rate(sample_rate)
+                .const_hz(220.0)
+                .square()
+                .mul_amp(signal::gen(|| 0.25))
+                .add_amp(
+                    signal::rate(sample_rate)
+                        .const_hz(880.0)
+                        .sine()
+                        .mul_amp(signal::gen(|| 0.25)),
+                ),
         );
 
         OscNode { signal }

@@ -1,7 +1,7 @@
 import "./TextEncoder.js";
 import init, { AudioManager, init_wasm } from "./wasm/wasm_mod_synth.js";
 
-export class TestAudioProcessor extends AudioWorkletProcessor {
+export class AudioProcessor extends AudioWorkletProcessor {
   initialized = false;
 
   static get parameterDescriptors() {
@@ -20,6 +20,7 @@ export class TestAudioProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
 
+    this.send_buffer = [];
     this.port.onmessage = (event) => this.onmessage(event.data);
   }
 
@@ -39,7 +40,7 @@ export class TestAudioProcessor extends AudioWorkletProcessor {
       });
     } else if (event.type === "begin-audio") {
       this.initialized = true;
-    }
+    } 
   }
 
   process(_inputs, outputs, parameters) {
@@ -50,9 +51,14 @@ export class TestAudioProcessor extends AudioWorkletProcessor {
           channel[i] = this.buffer[i];
         }
       });
+      this.send_buffer.push(...this.buffer);
+    }
+    if (this.send_buffer.length >= 2048) {
+      this.port.postMessage({type: "raw-samples", data: this.send_buffer})
+      this.send_buffer = [];
     }
     return true;
   }
 }
 
-registerProcessor("test-processor", TestAudioProcessor);
+registerProcessor("audio-processor", AudioProcessor);

@@ -1,4 +1,4 @@
-use crate::{console_log, port_panic, Node};
+use crate::{port_panic, Node};
 
 use super::{InputPorts, OutputPorts, PortType};
 

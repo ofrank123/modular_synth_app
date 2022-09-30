@@ -12,4 +12,7 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 - Subgraph node implemented, was sort of a pain in the ass.  As it stands, it takes in a graph, which needs to have a single output node.  Then the user can create and map external input nodes to input nodes of the internal nodes of the subgraph.  For the output ports, the output ports from the internal output node are mirrored.
 ## 28th Sept, 2022
 - Audio graph is working!
-- Next step is writing an oscilliscope to make it easier to debug issues with audio modules.  A proof of concept was written in a code pen.  It uses analyzer, but we will just use the samples directly out of wasm.
+- Next step is writing an oscilloscope to make it easier to debug issues with audio modules.  A proof of concept was written in a code pen.  It uses analyzer, but we will just use the samples directly out of wasm.
+## 30th Sept, 2022
+- Made a crude oscilloscope to help with debugging.  Not my finest work but should do alright for now.
+- Next step is to expand the oscillator module.   Would be good to get some sort of FM Synthesis test done ASAP.

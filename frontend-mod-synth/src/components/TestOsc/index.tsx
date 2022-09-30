@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAudioContext } from "../../hooks/audioContext";
+import { Oscilloscope } from "../Oscilloscope";
 
 const TestOsc = (): JSX.Element => {
-  const { toggle, state } = useAudioContext();
+  const { toggle, state, sendMessage } = useAudioContext();
+
+  useEffect(() => {
+    console.log("rerender");
+  });
+
   return (
-    <button onClick={toggle}>{state === "play" ? "Pause" : "Play"}</button>
+    <>
+      <button onClick={toggle}>{state === "play" ? "Pause" : "Play"}</button>
+      <Oscilloscope />
+    </>
   );
 };
 

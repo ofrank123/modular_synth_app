@@ -1,6 +1,17 @@
-interface CustomWorkletNode extends AudioWorkletNode {
-  init: (wasmBytes: ArrayBuffer, sampleRate: number) => void;
+import {
+  AudioEngineMessageOut,
+  AudioEngineMessageIn,
+} from "../hooks/audioContext";
+
+export interface CustomWorkletNode extends AudioWorkletNode {
+  onOtherMessage: (message: AudioEngineMessageIn) => void;
+  init: (
+    wasmBytes: ArrayBuffer,
+    sampleRate: number,
+    onMessage: (message: AudioEngineMessageIn) => void
+  ) => void;
   onmessage: (event: MessageEvent<any>) => void;
+  sendMessage: (message: AudioEngineMessageOut) => void;
 }
 
 // Darkness, evil, villany
@@ -10,8 +21,9 @@ export const audioWorkletNodeTransform = (
 ): CustomWorkletNode => {
   const newNode = node as CustomWorkletNode;
 
-  newNode.init = function (wasmBytes, sampleRate) {
+  newNode.init = function (wasmBytes, sampleRate, onOtherMessage) {
     this.port.onmessage = (event) => this.onmessage(event.data);
+    this.onOtherMessage = onOtherMessage;
 
     this.port.postMessage({
       type: "send-wasm-module",
@@ -25,6 +37,8 @@ export const audioWorkletNodeTransform = (
       this.port.postMessage({
         type: "begin-audio",
       });
+    } else {
+      this.onOtherMessage(event as AudioEngineMessageIn);
     }
   };
 
@@ -34,6 +48,10 @@ export const audioWorkletNodeTransform = (
         (err as ErrorEvent).message
       }`
     );
+  };
+
+  newNode.sendMessage = function (message: AudioEngineMessageOut) {
+    this.port.postMessage(message);
   };
 
   return newNode;

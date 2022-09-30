@@ -1,26 +1,62 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import { AudioProviderContext } from "../components/Providers/AudioProvider";
-import { audioWorkletNodeTransform } from "../util/CustomWorkletNode";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  AudioDataContext,
+  AudioProviderContext,
+} from "../components/Providers/AudioProvider";
+import {
+  audioWorkletNodeTransform,
+  CustomWorkletNode,
+} from "../util/CustomWorkletNode";
 
 export const useAudioContext = () => useContext(AudioProviderContext);
+export const useAudioData = () => useContext(AudioDataContext);
+
+export type AudioEngineMessageOut = {};
+
+export type AudioEngineMessageIn = {
+  type: "raw-samples";
+  data: number[];
+};
+
+// Some audio data our program may want to access
+export interface AudioData {
+  samples: number[]; // Most recent sample buffer
+}
 
 /**
  * Sets up and wraps the AudioContext API.  Exposes connection state and toggle function.
  */
-export const useAudioContextSetup = (): [boolean, () => void] => {
+export const useAudioContextSetup = (): {
+  connected: boolean;
+  toggle: () => void;
+  sendMessage: (message: AudioEngineMessageOut) => void;
+  audioData: AudioData;
+} => {
   const [connected, setConnected] = useState(false);
   const [userGestured, setUserGestured] = useState(false);
+  const [audioData, setAudioData] = useState<AudioData>({
+    samples: [],
+  });
 
   const ctx = useRef<AudioContext | null>();
-  const testNode = useRef<AudioWorkletNode | null>();
+  const node = useRef<CustomWorkletNode | null>();
+
+  const onMessage = (message: AudioEngineMessageIn) => {
+    if (message.type == "raw-samples") {
+      setAudioData((oldAudioData) => ({
+        ...oldAudioData,
+        samples: message.data,
+      }));
+    }
+  };
 
   useEffect(() => {
     if (userGestured) {
-      if (testNode.current && ctx.current) {
+      if (node.current && ctx.current) {
         if (connected) {
-          testNode.current.connect(ctx.current.destination);
+          node.current.connect(ctx.current.destination);
         } else {
-          testNode.current.disconnect(ctx.current.destination);
+          node.current.disconnect(ctx.current.destination);
         }
       } else {
         // Initial connection
@@ -39,35 +75,41 @@ export const useAudioContextSetup = (): [boolean, () => void] => {
           }
 
           // Add Worklet to audio Graph
-          const newTestNode = audioWorkletNodeTransform(
-            new AudioWorkletNode(newCtx, "test-processor")
+          const newNode = audioWorkletNodeTransform(
+            new AudioWorkletNode(newCtx, "audio-processor")
           );
 
-          if (newTestNode.parameters.has("sampleRate")) {
-            (newTestNode.parameters.get("sampleRate") as AudioParam).value =
+          if (newNode.parameters.has("sampleRate")) {
+            (newNode.parameters.get("sampleRate") as AudioParam).value =
               newCtx.sampleRate;
           }
 
-          newTestNode.init(wasmBytes, newCtx.sampleRate);
+          newNode.init(wasmBytes, newCtx.sampleRate, onMessage);
 
           // Connect up nodes
           if (connected) {
-            newTestNode.connect(newCtx.destination);
+            newNode.connect(newCtx.destination);
           } else {
-            newTestNode.disconnect(newCtx.destination);
+            newNode.disconnect(newCtx.destination);
           }
 
           ctx.current = newCtx;
-          testNode.current = newTestNode;
+          node.current = newNode;
         })();
       }
     }
   }, [userGestured, connected]);
 
-  const toggle = () => {
+  const toggle = useCallback(() => {
     setConnected((oldConnected) => !oldConnected);
     setUserGestured(true);
-  };
+  }, []);
 
-  return [connected, toggle];
+  const sendMessage = useCallback((message: AudioEngineMessageOut) => {
+    if (node.current) {
+      node.current.sendMessage(message);
+    }
+  }, []);
+
+  return { connected, toggle, sendMessage, audioData };
 };
