@@ -1,0 +1,29 @@
+.modArea {
+    background-color: $bg-light;
+    position: relative;
+    width: 1200px;
+    height: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.module {
+    border-radius: $border-radius;
+    background-color: $bg-light;
+    position: absolute;
+    box-shadow: $drop-shadow;
+    min-width: 200px;
+    border: 2px solid $outline-dark;
+    overflow: hidden;
+}
+
+.moduleHeader {
+    background-color: $bg-dark;
+    color: $text-bg-dark;
+    padding: .25rem;
+}
+
+.moduleBody {
+    display: flex;
+    flex-direction: column;
+}

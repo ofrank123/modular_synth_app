@@ -21,6 +21,10 @@ export const Oscilloscope = (): JSX.Element => {
     const canvas = canvasEl.current;
     const c = canvasEl.current?.getContext("2d");
     if (canvas && c) {
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
       c.fillStyle = "#181818";
       c.fillRect(0, 0, canvas.width, canvas.height);
       c.strokeStyle = "#33ee55";
@@ -60,5 +64,9 @@ export const Oscilloscope = (): JSX.Element => {
       requestAnimationFrame(draw);
     }
   }, []);
-  return <canvas ref={canvasEl} width="500px" height="200px"></canvas>;
+  return (
+    <div>
+      <canvas ref={canvasEl} />
+    </div>
+  );
 };

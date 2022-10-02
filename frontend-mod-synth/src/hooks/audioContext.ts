@@ -3,20 +3,33 @@ import {
   AudioDataContext,
   AudioProviderContext,
 } from "../components/Providers/AudioProvider";
-import {
-  audioWorkletNodeTransform,
-  CustomWorkletNode,
-} from "../util/CustomWorkletNode";
+import { CustomWorkletNode } from "../util/CustomWorkletNode";
+import { ModuleData } from "../util/ModuleData";
+import { setupAudio } from "../util/setupAudio";
+import { useAddModule, useAddConnection } from "./audioGraph";
 
 export const useAudioContext = () => useContext(AudioProviderContext);
 export const useAudioData = () => useContext(AudioDataContext);
 
 export type AudioEngineMessageOut = {};
 
-export type AudioEngineMessageIn = {
-  type: "raw-samples";
-  data: number[];
-};
+export type AudioEngineMessageIn =
+  | {
+      type: "raw-samples";
+      data: number[];
+    }
+  | {
+      type: "node-created";
+      node_id: number;
+      node_type: ModuleData["type"];
+    }
+  | {
+      type: "node-connected";
+      out_node_id: number;
+      out_node_port: string;
+      in_node_id: number;
+      in_node_port: string;
+    };
 
 // Some audio data our program may want to access
 export interface AudioData {
@@ -41,14 +54,31 @@ export const useAudioContextSetup = (): {
   const ctx = useRef<AudioContext | null>();
   const node = useRef<CustomWorkletNode | null>();
 
-  const onMessage = (message: AudioEngineMessageIn) => {
-    if (message.type == "raw-samples") {
-      setAudioData((oldAudioData) => ({
-        ...oldAudioData,
-        samples: message.data,
-      }));
-    }
-  };
+  const addModule = useAddModule();
+  const addConn = useAddConnection();
+
+  const onMessage = useCallback(
+    (message: AudioEngineMessageIn) => {
+      if (message.type == "raw-samples") {
+        setAudioData((oldAudioData) => ({
+          ...oldAudioData,
+          samples: message.data,
+        }));
+      } else if (message.type == "node-created") {
+        // Handle node creation event
+        addModule(message.node_id.toString(), message.node_type);
+      } else if (message.type == "node-connected") {
+        // Handle node connection event
+        addConn(
+          message.out_node_id.toString(),
+          message.out_node_port,
+          message.in_node_id.toString(),
+          message.in_node_port
+        );
+      }
+    },
+    [addModule, addConn]
+  );
 
   useEffect(() => {
     if (userGestured) {
@@ -60,45 +90,15 @@ export const useAudioContextSetup = (): {
         }
       } else {
         // Initial connection
-        (async () => {
-          // Create AudioContext
-          const newCtx = new AudioContext();
-
-          const wasmRes = await fetch("wasm/wasm_mod_synth_bg.wasm");
-          const wasmBytes = await wasmRes.arrayBuffer();
-
-          // Load Module
-          try {
-            await newCtx.audioWorklet.addModule("BundledProcessor.js");
-          } catch (err) {
-            throw new Error(`Failed to load TestAudioProcessor.js: ${err}`);
+        setupAudio(onMessage, connected).then(
+          ({ ctx: newCtx, node: newNode }) => {
+            ctx.current = newCtx;
+            node.current = newNode;
           }
-
-          // Add Worklet to audio Graph
-          const newNode = audioWorkletNodeTransform(
-            new AudioWorkletNode(newCtx, "audio-processor")
-          );
-
-          if (newNode.parameters.has("sampleRate")) {
-            (newNode.parameters.get("sampleRate") as AudioParam).value =
-              newCtx.sampleRate;
-          }
-
-          newNode.init(wasmBytes, newCtx.sampleRate, onMessage);
-
-          // Connect up nodes
-          if (connected) {
-            newNode.connect(newCtx.destination);
-          } else {
-            newNode.disconnect(newCtx.destination);
-          }
-
-          ctx.current = newCtx;
-          node.current = newNode;
-        })();
+        );
       }
     }
-  }, [userGestured, connected]);
+  }, [userGestured, connected, onMessage]);
 
   const toggle = useCallback(() => {
     setConnected((oldConnected) => !oldConnected);

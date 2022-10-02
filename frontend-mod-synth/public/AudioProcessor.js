@@ -40,11 +40,15 @@ export class AudioProcessor extends AudioWorkletProcessor {
       });
     } else if (event.type === "begin-audio") {
       this.initialized = true;
-    } 
+    }
   }
 
   process(_inputs, outputs, parameters) {
     if (this.initialized) {
+      while (this.manager.has_message()) {
+        this.handleMessage(this.manager.next_message());
+      }
+
       this.manager.process();
       outputs[0].forEach((channel) => {
         for (let i = 0; i < channel.length; i++) {
@@ -54,10 +58,33 @@ export class AudioProcessor extends AudioWorkletProcessor {
       this.send_buffer.push(...this.buffer);
     }
     if (this.send_buffer.length >= 2048) {
-      this.port.postMessage({type: "raw-samples", data: this.send_buffer})
+      this.port.postMessage({ type: "raw-samples", data: this.send_buffer });
       this.send_buffer = [];
     }
     return true;
+  }
+
+  handleMessage(message) {
+    const handlers = {
+      node_created: () => {
+        this.port.postMessage({
+          type: "node-created",
+          node_id: message.get_data("node_id").get_flt(),
+          node_type: message.get_data("node_type").get_str(),
+        });
+      },
+      node_connected: () => {
+        this.port.postMessage({
+          type: "node-connected",
+          out_node_id: message.get_data("out_node_id").get_flt(),
+          out_node_port: message.get_data("out_node_port").get_str(),
+          in_node_id: message.get_data("in_node_id").get_flt(),
+          in_node_port: message.get_data("in_node_port").get_str(),
+        });
+      },
+    };
+
+    handlers[message.get_name()]();
   }
 }
 

@@ -8,6 +8,10 @@ const nextConfig = {
 
 module.exports = {
   ...nextConfig,
+  sassOptions: {
+    includePaths: ["**/*.scss"],
+    prependData: `@import "./src/styles/variables.scss";`,
+  },
   webpack: (config, options) => {
     config.experiments = {
       ...(config.experiments || {}),

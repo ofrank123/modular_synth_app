@@ -187,7 +187,7 @@ macro_rules! console_log {
 /// ```
 pub type Graph = petgraph::graph::DiGraph<NodeData<BoxedNode>, (u32, u32), u32>;
 
-type Port<'a> = (<Graph as GraphBase>::NodeId, &'a str);
+type Port<'a> = (u32, &'a str);
 
 /// Helper to add edges to graph using node idx and port name
 pub fn add_graph_edge(
@@ -196,17 +196,21 @@ pub fn add_graph_edge(
     (input_id, input_port): Port,
 ) {
     let output_port_id = graph
-        .node_weight(output_id)
+        .node_weight(output_id.into())
         .expect(NO_NODE)
         .node
         .get_port(output_port, PortType::Out);
     let input_port_id = graph
-        .node_weight(input_id)
+        .node_weight(input_id.into())
         .expect(NO_NODE)
         .node
         .get_port(input_port, PortType::In);
 
-    graph.add_edge(output_id, input_id, (output_port_id, input_port_id));
+    graph.add_edge(
+        output_id.into(),
+        input_id.into(),
+        (output_port_id, input_port_id),
+    );
 }
 
 pub struct Processor {

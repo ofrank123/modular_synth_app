@@ -1,4 +1,5 @@
 mod manager;
+mod messages;
 mod utils;
 
 use utils::set_panic_hook;

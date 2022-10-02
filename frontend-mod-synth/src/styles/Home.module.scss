@@ -1,0 +1,11 @@
+.container {
+  padding: 0 2rem;
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  min-width: 600px;
+}
+
+.container > * {
+  margin-top: 1rem;
+}

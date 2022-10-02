@@ -16,3 +16,14 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 ## 30th Sept, 2022
 - Made a crude oscilloscope to help with debugging.  Not my finest work but should do alright for now.
 - Next step is to expand the oscillator module.   Would be good to get some sort of FM Synthesis test done ASAP.
+## 1st Oct, 2022
+- Setup messaging from the backend to the frontend.  The flow should keep the backend graph as the single source of truth.  Event flow should go something like this:
+    - Frontend requests an action from audio engine
+    - Audio engine validates and performs the action
+    - Audio engine messages the frontend with the result of the action
+    - Frontend performs visual update as a response.
+- Added some convienience functions to the audio manager for creating/connecting nodes.
+- Wanted to improve oscillator module but didn't have a way of messaging between the front and backend, now we do.
+## 2nd Oct, 2022
+- Started drawing components onto the frontend.  Creates the components on creation messages from the engine.  Currently do not have ports setup.
+- Next step is to draw the ports.  I don't have time to do it today, but the idea is that each port will register itself upon first render, and unregister upon unmounting.  Registration will be in the form of the node ID, port ID, and a ref to the object.  This will all get stored in a context.  Some SVG drawer component, which will basically sit on top of the ModArea, will be able to get refs to all of the ports by their node ID and port ID, and then grab their x/y coordinates relative to the parent div, drawing the appropriate lines.

@@ -45,6 +45,7 @@ export const AudioProvider = ({
   );
 
   const audioDataValue = React.useMemo<AudioData>(() => audioData, [audioData]);
+
   return (
     <AudioProviderContext.Provider value={audioContextValue}>
       <AudioDataContext.Provider value={audioData}>

@@ -1,6 +1,11 @@
 import React from "react";
+import { AudioGraphProvider } from "./AudioGraphProvider";
 import { AudioProvider } from "./AudioProvider";
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
-  return <AudioProvider>{children}</AudioProvider>;
+  return (
+    <AudioGraphProvider>
+      <AudioProvider>{children}</AudioProvider>
+    </AudioGraphProvider>
+  );
 };
