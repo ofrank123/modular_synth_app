@@ -13,17 +13,31 @@
     position: absolute;
     box-shadow: $drop-shadow;
     min-width: 200px;
-    border: 2px solid $outline-dark;
-    overflow: hidden;
+    border: $border-thickness solid $outline-dark;
 }
 
 .moduleHeader {
     background-color: $bg-dark;
     color: $text-bg-dark;
     padding: .25rem;
+    border-top-left-radius: $border-radius-inner;
+    border-top-right-radius: $border-radius-inner;
 }
 
 .moduleBody {
     display: flex;
     flex-direction: column;
+}
+
+.moduleBodyRow {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    padding: .5rem .75rem;
+    .modulePort {
+        height: 19px;
+        position: absolute;
+        top: 50%;
+        transform: translate(0, -50%);
+    }
 }
