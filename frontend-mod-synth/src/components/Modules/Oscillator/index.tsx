@@ -12,10 +12,8 @@ export const Oscillator = ({ module }: OscillatorProps): JSX.Element => {
   return (
     <ModuleBody>
       <ModuleRow>
-        <ModuleText>Input</ModuleText>
-        <ModuleText justify="right">Output</ModuleText>
+        <ModuleText justify="right">Audio</ModuleText>
         <Port nodeId={module.id} portId={"Audio"} portType={"OUT"} />
-        <Port nodeId={module.id} portId={"Audio"} portType={"IN"} />
       </ModuleRow>
     </ModuleBody>
   );

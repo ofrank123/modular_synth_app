@@ -27,7 +27,10 @@ export const useAddModule = (): AddModule => {
       });
 
       if (type === "output") {
-        moveModule("0", 1000, 250);
+        moveModule("0", 500, 250);
+      }
+      if (type === "oscillator") {
+        moveModule("1", 500, 0);
       }
     },
     [dispatch, moveModule]

@@ -29,3 +29,7 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 - Next step is to draw the ports.  I don't have time to do it today, but the idea is that each port will register itself upon first render, and unregister upon unmounting.  Registration will be in the form of the node ID, port ID, and a ref to the object.  This will all get stored in a context.  Some SVG drawer component, which will basically sit on top of the ModArea, will be able to get refs to all of the ports by their node ID and port ID, and then grab their x/y coordinates relative to the parent div, drawing the appropriate lines.
 ## 4th Oct, 2022
 - Added ports along with their styling.  Made some wrapper to make it easier to create module frontends.  Should maybe be refactored.
+## 6th Oct, 2022
+- Been working on PLDI a lot, so less time for this.
+- Got path drawing working!  It's kinda a small thing but I'm fairly happy with it.
+- Hover effects added for ports/connections.

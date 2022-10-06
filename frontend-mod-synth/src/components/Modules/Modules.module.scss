@@ -22,6 +22,7 @@
     padding: .25rem;
     border-top-left-radius: $border-radius-inner;
     border-top-right-radius: $border-radius-inner;
+    cursor: pointer;
 }
 
 .moduleBody {
@@ -40,5 +41,27 @@
         top: 50%;
         transform: translate(0, -50%);
         cursor: pointer;
+        &:hover {
+            circle {
+                stroke: $primary-color;
+                fill: $primary-color;
+            }
+        }
+    }
+}
+
+.connectionDrawer {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+    path {
+        stroke: $outline-dark;
+        stroke-width: 2px;
+        pointer-events: all;
+        cursor: pointer;
+        &:hover {
+            stroke: $primary-color;
+        }
     }
 }
