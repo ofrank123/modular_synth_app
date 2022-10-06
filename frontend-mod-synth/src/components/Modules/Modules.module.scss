@@ -23,6 +23,9 @@
     border-top-left-radius: $border-radius-inner;
     border-top-right-radius: $border-radius-inner;
     cursor: pointer;
+    &:active {
+        cursor: move;
+    }
 }
 
 .moduleBody {
