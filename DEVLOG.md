@@ -33,3 +33,8 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 - Been working on PLDI a lot, so less time for this.
 - Got path drawing working!  It's kinda a small thing but I'm fairly happy with it.
 - Hover effects added for ports/connections.
+
+## 7th Oct, 2022
+- Dragging works :) :) :)
+- It's a bit buggy though, currently you can drag modules outside of the module area wrapper div.  I think I need to attach the mouse listener to that instead of the window.  Needs some refining.
+- Path drawing is also a bit clunky and needs to be refined, but I'm going to put that in the "Polish" bucket, and deal with it later.

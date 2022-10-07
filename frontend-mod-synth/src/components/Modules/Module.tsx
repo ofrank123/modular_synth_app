@@ -1,10 +1,10 @@
 import React from "react";
-import JSXStyle from "styled-jsx/style";
 import type {
   ModuleData,
   OscillatorModuleData,
   OutputModuleData,
 } from "../../util/ModuleData";
+import { ModuleHeader } from "./ModuleHeader";
 import styles from "./Modules.module.scss";
 import { Oscillator } from "./Oscillator";
 import { Output } from "./Output";
@@ -54,7 +54,7 @@ export const Module = ({ moduleData }: ModuleProps): JSX.Element => {
   const { type, x_pos, y_pos } = moduleData;
   return (
     <div className={styles.module} style={{ top: y_pos, left: x_pos }}>
-      <div className={styles.moduleHeader}>{type}</div>
+      <ModuleHeader moduleData={moduleData} />
       {
         {
           oscillator: (

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useConnections } from "../../hooks/audioGraph";
+import { useConnections, useModules } from "../../hooks/audioGraph";
 import styles from "./Modules.module.scss";
 
 interface ConnectionProps {
@@ -19,6 +19,10 @@ const Connection = ({
   offset_x,
   offset_y,
 }: ConnectionProps): JSX.Element => {
+  // Force rerender on modules change
+  const modules = useModules();
+  console.log("rerender");
+
   const [{ in_x, in_y, out_x, out_y }, setCoords] = useState({
     in_x: 0,
     in_y: 0,
@@ -33,14 +37,13 @@ const Connection = ({
     const { x: out_x, y: out_y } = document
       .getElementById(`port_${out_node}_${out_port}_OUT`)
       ?.getBoundingClientRect() || { x: 0, y: 0 };
-    console.log(out_x);
     setCoords({
       in_x: in_x - offset_x + 3,
       in_y: in_y - offset_y + 9.5,
       out_x: out_x - offset_x + 15,
       out_y: out_y - offset_y + 9.5,
     });
-  }, [in_node, in_port, out_node, out_port, offset_x, offset_y]);
+  }, [in_node, in_port, out_node, out_port, offset_x, offset_y, modules]);
 
   return (
     <path
@@ -55,6 +58,7 @@ const Connection = ({
 
 export const ConnectionDrawer = (): JSX.Element => {
   const connections = useConnections();
+
   const ref = useRef<SVGSVGElement | null>(null);
   const [{ offset_x, offset_y }, setOffset] = useState({
     offset_x: 0,
