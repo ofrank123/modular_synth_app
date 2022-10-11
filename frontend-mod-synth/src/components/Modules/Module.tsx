@@ -51,7 +51,7 @@ interface ModuleProps {
 }
 
 export const Module = ({ moduleData }: ModuleProps): JSX.Element => {
-  const { type, x_pos, y_pos } = moduleData;
+  const { x_pos, y_pos } = moduleData;
   return (
     <div className={styles.module} style={{ top: y_pos, left: x_pos }}>
       <ModuleHeader moduleData={moduleData} />

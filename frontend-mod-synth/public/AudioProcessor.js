@@ -1,5 +1,10 @@
 import "./TextEncoder.js";
-import init, { AudioManager, init_wasm } from "./wasm/wasm_mod_synth.js";
+import init, {
+  AudioManager,
+  Message,
+  MessageParamData,
+  init_wasm,
+} from "./wasm/wasm_mod_synth.js";
 
 export class AudioProcessor extends AudioWorkletProcessor {
   initialized = false;
@@ -40,6 +45,19 @@ export class AudioProcessor extends AudioWorkletProcessor {
       });
     } else if (event.type === "begin-audio") {
       this.initialized = true;
+    } else {
+      const msg = Message.new(event.type);
+      for (const [key, value] of Object.entries(event)) {
+        if (key != "type") {
+          const param =
+            typeof value === "number"
+              ? MessageParamData.float(value)
+              : MessageParamData.string(value);
+
+          msg.add_param(key, param);
+        }
+      }
+      this.manager.add_message(msg);
     }
   }
 

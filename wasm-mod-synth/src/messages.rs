@@ -1,4 +1,7 @@
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{vec_deque::Drain, HashMap, VecDeque},
+    fmt,
+};
 
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -6,6 +9,51 @@ use wasm_bindgen::prelude::wasm_bindgen;
 pub struct MessageParamData {
     float: Option<f32>,
     string: Option<String>,
+}
+
+impl fmt::Display for MessageParamData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.float {
+            Some(flt) => write!(f, "{}", flt),
+            None => match &self.string {
+                Some(s) => write!(f, "{}", s),
+                None => write!(f, "No value!"),
+            },
+        }
+    }
+}
+
+#[wasm_bindgen]
+impl MessageParamData {
+    pub fn float(f: f32) -> Self {
+        MessageParamData {
+            float: Some(f),
+            string: None,
+        }
+    }
+
+    pub fn string(s: String) -> Self {
+        MessageParamData {
+            float: None,
+            string: Some(s),
+        }
+    }
+}
+
+impl MessageParamData {
+    pub fn is_float(&self) -> bool {
+        match self.float {
+            Some(_) => true,
+            None => false,
+        }
+    }
+
+    pub fn is_string(&self) -> bool {
+        match self.string {
+            Some(_) => true,
+            None => false,
+        }
+    }
 }
 
 impl From<f32> for MessageParamData {
@@ -63,6 +111,17 @@ pub struct Message {
 
 #[wasm_bindgen]
 impl Message {
+    pub fn new(name: String) -> Self {
+        Message {
+            name,
+            data: HashMap::new(),
+        }
+    }
+
+    pub fn add_param(&mut self, name: String, param: MessageParamData) {
+        self.data.insert(name, param);
+    }
+
     pub fn get_name(&self) -> String {
         self.name.clone()
     }
@@ -70,7 +129,7 @@ impl Message {
     pub fn get_data(&mut self, field: String) -> MessageParamData {
         self.data
             .remove(&field)
-            .expect("No such field on message object!")
+            .expect(format!("No such field '{}' on message object", field).as_str())
     }
 }
 
@@ -122,5 +181,9 @@ impl MessageQueue {
 
     pub fn has_next(&self) -> bool {
         self.messages.len() > 0
+    }
+
+    pub fn drain(&mut self) -> Drain<'_, Message> {
+        self.messages.drain(0..)
     }
 }

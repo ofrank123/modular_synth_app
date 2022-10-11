@@ -1,4 +1,4 @@
-use crate::buffer::Buffer;
+use crate::{buffer::Buffer, console_log};
 use core::fmt;
 use std::collections::HashMap;
 
@@ -39,10 +39,36 @@ macro_rules! port_panic {
     }};
 }
 
+#[derive(Debug)]
+pub enum ParamValue {
+    Num(f32),
+    Str(String),
+}
+
+impl From<f32> for ParamValue {
+    fn from(f: f32) -> Self {
+        ParamValue::Num(f)
+    }
+}
+
+impl From<String> for ParamValue {
+    fn from(s: String) -> Self {
+        ParamValue::Str(s)
+    }
+}
+
 pub trait Node {
     fn get_output_ports(&self) -> &[u32];
     fn get_port(&self, name: &str, port_type: PortType) -> u32;
     fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts);
+
+    fn update_param(&mut self, name: &str, value: ParamValue) {
+        console_log!(
+            "Node does not handle updates, received: {} {:?}",
+            name,
+            value
+        );
+    }
 }
 
 pub struct Input {

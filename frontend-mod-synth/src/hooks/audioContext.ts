@@ -11,7 +11,12 @@ import { useAddModule, useAddConnection } from "./audioGraph";
 export const useAudioContext = () => useContext(AudioProviderContext);
 export const useAudioData = () => useContext(AudioDataContext);
 
-export type AudioEngineMessageOut = {};
+export type AudioEngineMessageOut = {
+  type: "update-node-param";
+  id: string;
+  name: string;
+  value: number | string;
+};
 
 export type AudioEngineMessageIn =
   | {

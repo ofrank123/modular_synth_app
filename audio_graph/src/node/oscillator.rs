@@ -1,34 +1,82 @@
-use crate::{port_panic, Buffer, Node};
-use dasp::{signal, Signal};
+use std::f32::consts::PI;
 
-use super::{InputPorts, OutputPorts, PortType, NO_PORT};
+use crate::{port_panic, Buffer, Node};
+
+use super::{InputPorts, OutputPorts, ParamValue, PortType, NO_PORT};
+
+enum OscType {
+    Sine,
+    Square,
+}
+
+struct Oscillator {
+    sample_rate: f32,
+    phase: f32,
+    freq: f32,
+    osc_type: OscType,
+}
+
+impl Oscillator {
+    fn new(sample_rate: f32) -> Self {
+        return Oscillator {
+            sample_rate,
+            phase: 0.0,
+            freq: 440.0,
+            osc_type: OscType::Square,
+        };
+    }
+
+    fn next(&mut self) -> f32 {
+        let sample = match self.osc_type {
+            OscType::Sine => self.sine_sample(),
+            OscType::Square => self.square_sample(),
+        };
+
+        // Get new phase
+        self.phase += (2.0 * PI * self.freq) / self.sample_rate;
+
+        // Mod by 2pi
+        if self.phase > 2.0 * PI {
+            self.phase -= 2.0 * PI;
+        }
+
+        sample
+    }
+
+    fn sine_sample(&self) -> f32 {
+        self.phase.sin() / 2.0
+    }
+    fn square_sample(&self) -> f32 {
+        let mut sample = 0.0;
+        if self.phase > PI {
+            sample = 1.0;
+        }
+        sample
+    }
+}
 
 pub struct OscNode {
-    signal: Box<dyn Signal<Frame = f64>>,
+    oscillator: Oscillator,
 }
 
 impl OscNode {
     const OUT_PORTS: [u32; 1] = [0];
 
     pub fn new(sample_rate: f64) -> Self {
-        let signal = Box::new(
-            signal::rate(sample_rate)
-                .const_hz(220.0)
-                .square()
-                .mul_amp(signal::gen(|| 0.25))
-                .add_amp(
-                    signal::rate(sample_rate)
-                        .const_hz(880.0)
-                        .sine()
-                        .mul_amp(signal::gen(|| 0.25)),
-                ),
-        );
-
-        OscNode { signal }
+        OscNode {
+            oscillator: Oscillator::new(sample_rate as f32),
+        }
     }
 }
 
 impl Node for OscNode {
+    fn update_param(&mut self, name: &str, param: ParamValue) {
+        match (name, param) {
+            ("frequency", ParamValue::Num(n)) => self.oscillator.freq = n,
+            (_, _) => panic!("Invalid param update on oscillator"),
+        }
+    }
+
     fn get_output_ports(&self) -> &[u32] {
         &Self::OUT_PORTS
     }
@@ -45,8 +93,9 @@ impl Node for OscNode {
 
         for buffer in output_bufs {
             for i in 0..Buffer::LEN {
-                let next_sample = self.signal.next() as f32;
-                buffer[i] = next_sample as f32;
+                // Attenuate the sample
+                let next_sample = self.oscillator.next() * 0.5;
+                buffer[i] = next_sample;
             }
         }
     }

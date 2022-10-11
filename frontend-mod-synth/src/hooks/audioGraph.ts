@@ -8,6 +8,7 @@ import {
 import { Connection } from "../util/Connection";
 import { ModuleData } from "../util/ModuleData";
 import { createModule } from "../util/moduleHelpers";
+import { useAudioContext } from "./audioContext";
 
 export const useModules = (): ModuleData[] => useContext(ModulesContext);
 export const useConnections = (): Connection[] =>

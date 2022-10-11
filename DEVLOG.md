@@ -38,3 +38,10 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 - Dragging works :) :) :)
 - It's a bit buggy though, currently you can drag modules outside of the module area wrapper div.  I think I need to attach the mouse listener to that instead of the window.  Needs some refining.
 - Path drawing is also a bit clunky and needs to be refined, but I'm going to put that in the "Polish" bucket, and deal with it later.
+
+# 11th Oct
+- Took a bit of a break to focus on PLDI, now back to it.
+- Refactored the oscillator module to use custom DSP code instead of dasp::signal.  It's pretty simple, a phase accumulator keeps track of where in radians the phase of the oscillator is (calculated using the sample rate and the pitch), and then applies the appropriate function to the phase to get the next sample.  Write now I have the sine and square functions written.
+- Message passing from frontend to backend implemented, the only message currently available is to change the parameter of some node.  While message passing works, the seam between the JS and the Rust is pretty rough.  I'd like to clean it up in the future if possible.
+- Used the new message passing to implement a pitch slider for the oscillator module, This represents the first user control of the synth in the project.
+- Planning on making users able to edit connections next.

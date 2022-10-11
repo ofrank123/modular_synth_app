@@ -21,7 +21,6 @@ const Connection = ({
 }: ConnectionProps): JSX.Element => {
   // Force rerender on modules change
   const modules = useModules();
-  console.log("rerender");
 
   const [{ in_x, in_y, out_x, out_y }, setCoords] = useState({
     in_x: 0,
