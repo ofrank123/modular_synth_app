@@ -48,7 +48,7 @@ export const AudioProvider = ({
 
   return (
     <AudioProviderContext.Provider value={audioContextValue}>
-      <AudioDataContext.Provider value={audioData}>
+      <AudioDataContext.Provider value={audioDataValue}>
         {children}
       </AudioDataContext.Provider>
     </AudioProviderContext.Provider>

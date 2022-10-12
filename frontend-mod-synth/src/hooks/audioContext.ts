@@ -4,19 +4,35 @@ import {
   AudioProviderContext,
 } from "../components/Providers/AudioProvider";
 import { CustomWorkletNode } from "../util/CustomWorkletNode";
-import { ModuleData } from "../util/ModuleData";
+import { ModuleData, ModuleTypes } from "../util/ModuleData";
 import { setupAudio } from "../util/setupAudio";
-import { useAddModule, useAddConnection } from "./audioGraph";
+import { useUpdateGraph } from "./audioGraph";
 
 export const useAudioContext = () => useContext(AudioProviderContext);
 export const useAudioData = () => useContext(AudioDataContext);
 
-export type AudioEngineMessageOut = {
-  type: "update-node-param";
-  id: string;
-  name: string;
-  value: number | string;
-};
+export type AudioEngineMessageOut =
+  | {
+      type: "update-node-param";
+      id: string;
+      name: string;
+      value: number | string;
+    }
+  | {
+      type: "remove-connection";
+      id: string;
+    }
+  | {
+      type: "add-connection";
+      in_node: string;
+      out_node: string;
+      in_port: string;
+      out_port: string;
+    }
+  | {
+      type: "add-module";
+      modType: ModuleTypes;
+    };
 
 export type AudioEngineMessageIn =
   | {
@@ -30,10 +46,15 @@ export type AudioEngineMessageIn =
     }
   | {
       type: "node-connected";
+      edge_id: number;
       out_node_id: number;
       out_node_port: string;
       in_node_id: number;
       in_node_port: string;
+    }
+  | {
+      type: "connection-removed";
+      edge_id: number;
     };
 
 // Some audio data our program may want to access
@@ -59,8 +80,7 @@ export const useAudioContextSetup = (): {
   const ctx = useRef<AudioContext | null>();
   const node = useRef<CustomWorkletNode | null>();
 
-  const addModule = useAddModule();
-  const addConn = useAddConnection();
+  const { addConnection, addModule, removeConnection } = useUpdateGraph();
 
   const onMessage = useCallback(
     (message: AudioEngineMessageIn) => {
@@ -74,15 +94,21 @@ export const useAudioContextSetup = (): {
         addModule(message.node_id.toString(), message.node_type);
       } else if (message.type == "node-connected") {
         // Handle node connection event
-        addConn(
-          message.out_node_id.toString(),
-          message.out_node_port,
-          message.in_node_id.toString(),
-          message.in_node_port
-        );
+        addConnection({
+          id: message.edge_id.toString(),
+          out_node: message.out_node_id.toString(),
+          out_port: message.out_node_port,
+          in_node: message.in_node_id.toString(),
+          in_port: message.in_node_port,
+        });
+      } else if (message.type == "connection-removed") {
+        // Handle connection removal event
+        removeConnection({
+          id: message.edge_id.toString(),
+        });
       }
     },
-    [addModule, addConn]
+    [addModule, addConnection, removeConnection]
   );
 
   useEffect(() => {

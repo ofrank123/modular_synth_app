@@ -15,6 +15,12 @@ export const GraphDispatchContext = createContext<
           type: "updateModule";
           data: { id: string; modData: { x_pos?: number; y_pos?: number } };
         }
+      | {
+          type: "removeConnection";
+          data: {
+            id: string;
+          };
+        }
   ) => void
 >(() => console.log("No context"));
 
@@ -37,6 +43,10 @@ export const AudioGraphProvider = ({
           oldModules.map((mod) =>
             mod.id === msg.data.id ? { ...mod, ...msg.data.modData } : mod
           )
+        );
+      } else if (msg.type === "removeConnection") {
+        setConnections((oldConns) =>
+          oldConns.filter((value) => value.id !== msg.data.id)
         );
       }
     },

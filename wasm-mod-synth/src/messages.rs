@@ -145,17 +145,26 @@ impl Message {
     }
 
     pub fn node_connected(
+        edge_id: u32,
         (out_node_id, out_node_port): (u32, &str),
         (in_node_id, in_node_port): (u32, &str),
     ) -> Self {
         Message {
             name: "node_connected".into(),
             data: HashMap::from([
+                ("edge_id".to_string(), edge_id.into()),
                 ("out_node_id".to_string(), out_node_id.into()),
                 ("out_node_port".to_string(), out_node_port.into()),
                 ("in_node_id".to_string(), in_node_id.into()),
                 ("in_node_port".to_string(), in_node_port.into()),
             ]),
+        }
+    }
+
+    pub fn connection_removed(edge_id: u32) -> Self {
+        Message {
+            name: "connection_removed".into(),
+            data: HashMap::from([("edge_id".to_string(), edge_id.into())]),
         }
     }
 }

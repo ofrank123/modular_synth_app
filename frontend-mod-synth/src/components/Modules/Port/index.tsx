@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "../Modules.module.scss";
+import { useNodeConnector } from "../../../hooks/nodeConnector";
 
 interface PortProps {
   nodeId: string;
@@ -8,16 +9,17 @@ interface PortProps {
   style?: React.CSSProperties;
 }
 
-export const Port = ({
-  nodeId,
-  portId,
-  portType,
-  style,
-}: PortProps): JSX.Element => {
+export const Port = ({ nodeId, portId, portType }: PortProps): JSX.Element => {
+  const { connect } = useNodeConnector();
   return (
     <div
       className={styles.modulePort}
       id={`port_${nodeId}_${portId}_${portType}`}
+      onClick={(event) => {
+        event.stopPropagation();
+        event.nativeEvent.stopImmediatePropagation();
+        connect(nodeId, portId, portType);
+      }}
       style={{
         right: portType === "OUT" ? "-10px" : undefined,
         left: portType === "IN" ? "-10px" : undefined,

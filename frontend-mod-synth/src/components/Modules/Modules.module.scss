@@ -66,5 +66,11 @@
         &:hover {
             stroke: $primary-color;
         }
+        &.mouseConnection {
+            pointer-events: none;
+            &:hover {
+                stroke: $outline-dark;
+            }
+        }
     }
 }

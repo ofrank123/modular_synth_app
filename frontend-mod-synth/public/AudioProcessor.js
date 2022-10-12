@@ -94,10 +94,17 @@ export class AudioProcessor extends AudioWorkletProcessor {
       node_connected: () => {
         this.port.postMessage({
           type: "node-connected",
+          edge_id: message.get_data("edge_id").get_flt(),
           out_node_id: message.get_data("out_node_id").get_flt(),
           out_node_port: message.get_data("out_node_port").get_str(),
           in_node_id: message.get_data("in_node_id").get_flt(),
           in_node_port: message.get_data("in_node_port").get_str(),
+        });
+      },
+      connection_removed: () => {
+        this.port.postMessage({
+          type: "connection-removed",
+          edge_id: message.get_data("edge_id").get_flt(),
         });
       },
     };

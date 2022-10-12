@@ -15,55 +15,54 @@ export const useConnections = (): Connection[] =>
   useContext(ConnectionsContext);
 
 type AddModule = (id: string, type: ModuleData["type"]) => void;
+type AddConnection = (data: Connection) => void;
+type RemoveConnection = (data: { id: string }) => void;
 
-export const useAddModule = (): AddModule => {
+export const useUpdateGraph = (): {
+  addModule: AddModule;
+  addConnection: AddConnection;
+  removeConnection: RemoveConnection;
+} => {
   const dispatch = useContext(GraphDispatchContext);
+
   const moveModule = useMoveModule();
 
-  return useCallback<AddModule>(
+  const addConnection = useCallback<AddConnection>(
+    (data) => {
+      dispatch({
+        type: "addConnection",
+        data,
+      });
+    },
+    [dispatch]
+  );
+
+  const addModule = useCallback<AddModule>(
     (id, type) => {
       dispatch({
         type: "addModule",
         data: createModule(id, type),
       });
-
-      if (type === "output") {
-        moveModule("0", 500, 250);
-      }
-      if (type === "oscillator") {
-        moveModule("1", 500, 0);
-      }
     },
-    [dispatch, moveModule]
+    [dispatch]
   );
-};
 
-type AddConnection = (
-  out_node: string,
-  out_port: string,
-  in_node: string,
-  in_port: string
-) => void;
-
-export const useAddConnection = (): AddConnection => {
-  const dispatch = useContext(GraphDispatchContext);
-
-  return useCallback<AddConnection>(
-    (out_node, out_port, in_node, in_port) => {
+  const removeConnection = useCallback<RemoveConnection>(
+    (data) => {
       dispatch({
-        type: "addConnection",
-        data: { out_node, out_port, in_node, in_port },
+        type: "removeConnection",
+        data,
       });
     },
     [dispatch]
   );
+
+  return { addModule, addConnection, removeConnection };
 };
 
 type MoveModule = (id: string, x_pos: number, y_pos: number) => void;
-
 export const useMoveModule = (): MoveModule => {
   const dispatch = useContext(GraphDispatchContext);
-  const modules = useModules();
 
   return useCallback<MoveModule>(
     (id, x_pos, y_pos) => {

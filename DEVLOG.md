@@ -45,3 +45,13 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 - Message passing from frontend to backend implemented, the only message currently available is to change the parameter of some node.  While message passing works, the seam between the JS and the Rust is pretty rough.  I'd like to clean it up in the future if possible.
 - Used the new message passing to implement a pitch slider for the oscillator module, This represents the first user control of the synth in the project.
 - Planning on making users able to edit connections next.
+
+# 12th Oct
+- Big day today
+- Connection editing/modifying implemented.  Users can now add connections between modules as they see fit.  One thing that doesn't work quite right is that the system does not restrict users from adding multiple patch cords to an input, which doesn't do anything as it stands.  This behaviour should require a mixer module, because it's confusing otherwise.
+- FM Synthesis is possible! Granted, it's basically the only thing that works right now, but it's still pretty cool.
+- Module addition implmented, you can add as many oscillators as your CPU lets you :).
+- In order to get connections working, I needed to switch to using petgraph's StableGraph, as it keeps edge indexes stable upon deletion.  I assumed this would be trivial, but petgraph hadn't implemented the edges_connecting (which returns an iterator of edges between the two nodes).  To ammend this, I forked petgraph and added the functionality.  I should be able to make a PR for it in the near future.
+- I need to figure out a better way of handling the normalized inputs to the pitch.  Ideally, +1 would pitch up the frequency by 128 midi notes, and vice versa for -1.
+- I think I will have a pitch input for my oscillators, that directly controls the pitch, as well as a coarse and fine detune knob that work on semitones and cents respectively.  This will be a lot more flexible than the single pitch knob I use right now.
+- Next step module-wise is probably a step sequencer module, then an EG.

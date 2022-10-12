@@ -71,8 +71,13 @@ impl AudioManager {
     ) {
         let out_node = (out_node_idx, out_node_port);
         let in_node = (in_node_idx, in_node_port);
-        audio_graph::add_graph_edge(&mut self.graph, out_node, in_node);
-        self.send_message(Message::node_connected(out_node, in_node))
+        let edge_idx = audio_graph::add_graph_edge(&mut self.graph, out_node, in_node);
+        self.send_message(Message::node_connected(edge_idx, out_node, in_node))
+    }
+
+    pub fn disconnect(&mut self, edge_idx: u32) {
+        audio_graph::remove_graph_edge(&mut self.graph, edge_idx);
+        self.send_message(Message::connection_removed(edge_idx));
     }
 
     pub fn has_message(&self) -> bool {
@@ -103,7 +108,8 @@ impl AudioManager {
 
 impl AudioManager {
     fn handle_in_messages(&mut self) {
-        for mut message in self.message_queue_in.drain() {
+        let drain = self.message_queue_in.drain();
+        for mut message in drain {
             let name = message.get_name();
             match name.as_str() {
                 "update-node-param" => {
@@ -122,6 +128,61 @@ impl AudioManager {
                     } else {
                         node.update_param(name.as_str(), ParamValue::Str(value.get_str()))
                     }
+                }
+                "remove-connection" => {
+                    let edge_idx = message
+                        .get_data("id".to_string())
+                        .get_str()
+                        .parse::<usize>()
+                        .expect("Could not parse edge id")
+                        as u32;
+
+                    audio_graph::remove_graph_edge(&mut self.graph, edge_idx);
+
+                    // Can't use send_message, because it borrows all of self
+                    self.message_queue_out
+                        .push(Message::connection_removed(edge_idx))
+                }
+                "add-connection" => {
+                    let in_node_idx = message
+                        .get_data("in_node".to_string())
+                        .get_str()
+                        .parse::<u32>()
+                        .expect("Could not parse");
+
+                    let out_node_idx = message
+                        .get_data("out_node".to_string())
+                        .get_str()
+                        .parse::<u32>()
+                        .expect("Could not parse");
+
+                    let in_port = message.get_data("in_port".to_string()).get_str();
+                    let out_port = message.get_data("out_port".to_string()).get_str();
+
+                    let edge_id = audio_graph::add_graph_edge(
+                        &mut self.graph,
+                        (out_node_idx, out_port.as_str()),
+                        (in_node_idx, in_port.as_str()),
+                    );
+
+                    self.message_queue_out.push(Message::node_connected(
+                        edge_id,
+                        (out_node_idx, out_port.as_str()),
+                        (in_node_idx, in_port.as_str()),
+                    ))
+                }
+                "add-module" => {
+                    let mod_type = message.get_data("modType".to_string()).get_str();
+                    let node_idx = match mod_type.as_str() {
+                        "oscillator" => {
+                            let osc_node = OscNode::new(self.sample_rate);
+                            self.graph.add_node(NodeData::boxed(osc_node)).index() as u32
+                        }
+                        t => panic!("No such node type: {}", t),
+                    };
+
+                    self.message_queue_out
+                        .push(Message::node_created(node_idx, mod_type.as_str()));
                 }
                 _ => panic!("Unsupported message"),
             }

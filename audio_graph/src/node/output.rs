@@ -1,6 +1,6 @@
 use crate::{port_panic, Node};
 
-use super::{InputPorts, OutputPorts, PortType};
+use super::{Buffer, InputPorts, OutputPorts, PortType};
 
 pub struct OutputSink {
     output_buffer: Box<[f32]>,
@@ -31,7 +31,10 @@ impl Node for OutputSink {
     fn process(&mut self, inputs: &InputPorts, _output: &mut OutputPorts) {
         let input = match inputs.get(&0) {
             Some(n) => n,
-            None => return,
+            None => {
+                self.output_buffer.copy_from_slice(&Buffer::SILENT);
+                return;
+            }
         };
         // Write first channel of first input to output buffer
         let in_buffers = input.buffers();

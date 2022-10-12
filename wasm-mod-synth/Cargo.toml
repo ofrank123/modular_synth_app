@@ -13,7 +13,7 @@ default = ["console_error_panic_hook"]
 [dependencies]
 wasm-bindgen = "0.2.63"
 dasp = { version = "0.11.0", features = ["all"] }
-petgraph = "0.5"
+petgraph = { git = "https://github.com/ofrank123/petgraph.git", features = ["all"] }
 audio_graph = { path = "../audio_graph" }
 web-sys = { version = "0.3.60", features = ["console"] }
 

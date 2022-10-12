@@ -25,8 +25,8 @@ export const Oscillator = ({ module }: OscillatorProps): JSX.Element => {
         <Slider
           min={1}
           max={128}
+          defaultValue={69}
           onChange={(value) => {
-            console.log(sliderValToPitch(value));
             sendMessage({
               type: "update-node-param",
               id: module.id,
@@ -35,6 +35,25 @@ export const Oscillator = ({ module }: OscillatorProps): JSX.Element => {
             });
           }}
         />
+        <Port nodeId={module.id} portId={"Frequency"} portType={"IN"} />
+      </ModuleRow>
+      <ModuleRow>
+        <ModuleText>Wave Type</ModuleText>
+        <select
+          name="Wave Type"
+          id="wave-type"
+          onChange={(event) => {
+            sendMessage({
+              type: "update-node-param",
+              id: module.id,
+              name: "type",
+              value: event.currentTarget.value,
+            });
+          }}
+        >
+          <option value="sine">Sine</option>
+          <option value="square">Square</option>
+        </select>
       </ModuleRow>
       <ModuleRow>
         <ModuleText justify="right">Audio</ModuleText>

@@ -1,3 +1,5 @@
+export type ModuleTypes = "oscillator" | "output";
+
 export type ModuleData = OscillatorModuleData | OutputModuleData;
 
 export type ModuleDataBase = {

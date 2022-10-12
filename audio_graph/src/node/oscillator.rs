@@ -12,7 +12,8 @@ enum OscType {
 struct Oscillator {
     sample_rate: f32,
     phase: f32,
-    freq: f32,
+    offset_freq: f32,
+    base_freq: f32,
     osc_type: OscType,
 }
 
@@ -21,8 +22,9 @@ impl Oscillator {
         return Oscillator {
             sample_rate,
             phase: 0.0,
-            freq: 440.0,
-            osc_type: OscType::Square,
+            offset_freq: 0.0,
+            base_freq: 440.0,
+            osc_type: OscType::Sine,
         };
     }
 
@@ -33,7 +35,8 @@ impl Oscillator {
         };
 
         // Get new phase
-        self.phase += (2.0 * PI * self.freq) / self.sample_rate;
+        let freq = self.base_freq + self.offset_freq;
+        self.phase += (2.0 * PI * freq) / self.sample_rate;
 
         // Mod by 2pi
         if self.phase > 2.0 * PI {
@@ -44,10 +47,10 @@ impl Oscillator {
     }
 
     fn sine_sample(&self) -> f32 {
-        self.phase.sin() / 2.0
+        self.phase.sin()
     }
     fn square_sample(&self) -> f32 {
-        let mut sample = 0.0;
+        let mut sample = -1.0;
         if self.phase > PI {
             sample = 1.0;
         }
@@ -69,10 +72,20 @@ impl OscNode {
     }
 }
 
+// Convert a CV value to a pitch offset
+fn val_to_pitch_offset(val: f32) -> f32 {
+    val * 1000.0
+}
+
 impl Node for OscNode {
     fn update_param(&mut self, name: &str, param: ParamValue) {
         match (name, param) {
-            ("frequency", ParamValue::Num(n)) => self.oscillator.freq = n,
+            ("frequency", ParamValue::Num(n)) => self.oscillator.base_freq = n,
+            ("type", ParamValue::Str(s)) => match s.as_str() {
+                "sine" => self.oscillator.osc_type = OscType::Sine,
+                "square" => self.oscillator.osc_type = OscType::Square,
+                _ => panic!("Invalid osc type"),
+            },
             (_, _) => panic!("Invalid param update on oscillator"),
         }
     }
@@ -84,16 +97,23 @@ impl Node for OscNode {
     fn get_port(&self, name: &str, port_type: super::PortType) -> u32 {
         match (port_type, name) {
             (PortType::Out, "Audio") => 0,
+            (PortType::In, "Frequency") => 0,
             (t, n) => port_panic!(t, n),
         }
     }
 
-    fn process(&mut self, _inputs: &InputPorts, output: &mut OutputPorts) {
+    fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts) {
+        let freq_in = match inputs.get(&0) {
+            Some(n) => &n.buffers()[0],
+            None => &Buffer::SILENT,
+        };
+
         let output_bufs = output.get_mut(&0).expect(NO_PORT);
 
         for buffer in output_bufs {
             for i in 0..Buffer::LEN {
                 // Attenuate the sample
+                self.oscillator.offset_freq = val_to_pitch_offset(freq_in[i]);
                 let next_sample = self.oscillator.next() * 0.5;
                 buffer[i] = next_sample;
             }
