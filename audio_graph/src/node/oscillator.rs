@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use crate::{port_panic, Buffer, Node};
+use crate::{console_log, port_panic, Buffer, Node};
 
 use super::{InputPorts, OutputPorts, ParamValue, PortType, NO_PORT};
 
@@ -34,14 +34,16 @@ impl Oscillator {
             OscType::Square => self.square_sample(),
         };
 
-        // Get new phase
-        let freq = self.base_freq + self.offset_freq;
+        // Clip Frequency
+        let freq = (self.base_freq + self.offset_freq).max(0.0);
+
         self.phase += (2.0 * PI * freq) / self.sample_rate;
 
-        // Mod by 2pi
-        if self.phase > 2.0 * PI {
-            self.phase -= 2.0 * PI;
+        if self.phase > 4.0 * PI || self.phase < 0.0 {
+            console_log!("{}", self.phase);
         }
+
+        self.phase = self.phase.rem_euclid(2.0 * PI);
 
         sample
     }
