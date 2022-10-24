@@ -60,3 +60,4 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 - Took a break from things for a bit to focus on other practicals
 - Built out a Math module, which in its current form is a 4 way attenuverting mixer.  It's a bit based on the Maths module by Make Noise but isn't anywhere near that feature set yet, much more to be added.  It's an important utility module as it allows me to mix signals easily.
 - Having a demo with Ian tomorrow which should be fun.
+- While implementing the module, there were a lot of moving parts that had to come together.  I'd like, if possible, to specify the module entirely in Rust, and just have the frontend be able to figure out how to render it automatically.  This will of course lead to some restrictions, in frontend design, but I think I'm willing to sacrifice that for ease of use.  A refactor to this is due.
