@@ -114,9 +114,8 @@ impl Node for OscNode {
 
         for buffer in output_bufs {
             for i in 0..Buffer::LEN {
-                // Attenuate the sample
                 self.oscillator.offset_freq = val_to_pitch_offset(freq_in[i]);
-                let next_sample = self.oscillator.next() * 0.5;
+                let next_sample = self.oscillator.next();
                 buffer[i] = next_sample;
             }
         }

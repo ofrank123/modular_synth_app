@@ -1,5 +1,6 @@
 import React from "react";
 import type {
+  MathModuleData,
   ModuleData,
   OscillatorModuleData,
   OutputModuleData,
@@ -8,6 +9,7 @@ import { ModuleHeader } from "./ModuleHeader";
 import styles from "./Modules.module.scss";
 import { Oscillator } from "./Oscillator";
 import { Output } from "./Output";
+import { Math } from "./Math";
 
 interface ModuleTextProps {
   children: React.ReactNode;
@@ -51,7 +53,8 @@ interface ModuleProps {
 }
 
 export const Module = ({ moduleData }: ModuleProps): JSX.Element => {
-  const { x_pos, y_pos } = moduleData;
+  const { type, x_pos, y_pos } = moduleData;
+  console.log(moduleData);
   return (
     <div className={styles.module} style={{ top: y_pos, left: x_pos }}>
       <ModuleHeader moduleData={moduleData} />
@@ -60,8 +63,9 @@ export const Module = ({ moduleData }: ModuleProps): JSX.Element => {
           oscillator: (
             <Oscillator module={moduleData as OscillatorModuleData} />
           ),
+          math: <Math module={moduleData as MathModuleData} />,
           output: <Output module={moduleData as OutputModuleData} />,
-        }[moduleData.type]
+        }[type]
       }
     </div>
   );

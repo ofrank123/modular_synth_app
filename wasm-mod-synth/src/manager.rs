@@ -1,8 +1,8 @@
 use wasm_bindgen::prelude::*;
 
-use audio_graph::node::{OscNode, OutputSink, ParamValue};
-use audio_graph::Graph;
+use audio_graph::node::{MathNode, OscNode, OutputSink, ParamValue};
 use audio_graph::NodeData;
+use audio_graph::{console_log, Graph};
 use petgraph::graph::NodeIndex;
 use petgraph::{self as petgraph};
 
@@ -177,6 +177,10 @@ impl AudioManager {
                         "oscillator" => {
                             let osc_node = OscNode::new(self.sample_rate);
                             self.graph.add_node(NodeData::boxed(osc_node)).index() as u32
+                        }
+                        "math" => {
+                            let math_node = MathNode::new();
+                            self.graph.add_node(NodeData::boxed(math_node)).index() as u32
                         }
                         t => panic!("No such node type: {}", t),
                     };

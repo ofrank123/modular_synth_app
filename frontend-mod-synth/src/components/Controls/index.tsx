@@ -14,6 +14,13 @@ export const Controls = () => {
       >
         Add Oscillator
       </button>
+      <button
+        onClick={() => {
+          addModule("math");
+        }}
+      >
+        Add Math
+      </button>
     </div>
   );
 };

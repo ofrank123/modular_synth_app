@@ -55,3 +55,8 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 - I need to figure out a better way of handling the normalized inputs to the pitch.  Ideally, +1 would pitch up the frequency by 128 midi notes, and vice versa for -1.
 - I think I will have a pitch input for my oscillators, that directly controls the pitch, as well as a coarse and fine detune knob that work on semitones and cents respectively.  This will be a lot more flexible than the single pitch knob I use right now.
 - Next step module-wise is probably a step sequencer module, then an EG.
+
+# 24th Oct
+- Took a break from things for a bit to focus on other practicals
+- Built out a Math module, which in its current form is a 4 way attenuverting mixer.  It's a bit based on the Maths module by Make Noise but isn't anywhere near that feature set yet, much more to be added.  It's an important utility module as it allows me to mix signals easily.
+- Having a demo with Ian tomorrow which should be fun.

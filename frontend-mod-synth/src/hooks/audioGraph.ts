@@ -25,8 +25,6 @@ export const useUpdateGraph = (): {
 } => {
   const dispatch = useContext(GraphDispatchContext);
 
-  const moveModule = useMoveModule();
-
   const addConnection = useCallback<AddConnection>(
     (data) => {
       dispatch({

@@ -1,6 +1,9 @@
-export type ModuleTypes = "oscillator" | "output";
+export type ModuleTypes = "oscillator" | "output" | "math";
 
-export type ModuleData = OscillatorModuleData | OutputModuleData;
+export type ModuleData =
+  | OscillatorModuleData
+  | OutputModuleData
+  | MathModuleData;
 
 export type ModuleDataBase = {
   id: string;
@@ -10,6 +13,10 @@ export type ModuleDataBase = {
 
 export type OscillatorModuleData = {
   type: "oscillator";
+} & ModuleDataBase;
+
+export type MathModuleData = {
+  type: "math";
 } & ModuleDataBase;
 
 export type OutputModuleData = {

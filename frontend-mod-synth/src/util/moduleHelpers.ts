@@ -14,6 +14,10 @@ const defaultModules: Record<ModuleData["type"], Omit<ModuleData, "id">> = {
     ...defaultModBase,
     type: "output",
   },
+  math: {
+    ...defaultModBase,
+    type: "math",
+  },
 };
 
 export const createModule = (

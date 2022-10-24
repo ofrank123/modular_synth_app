@@ -1,3 +1,5 @@
+#![feature(map_many_mut)]
+
 use std::collections::HashMap;
 
 pub use buffer::Buffer;
@@ -100,7 +102,9 @@ impl NodeData<BoxedNode> {
         T: 'static + Node,
     {
         let mut ports = HashMap::new();
-        ports.insert(0, vec![Buffer::SILENT]);
+        for &port in node.get_output_ports() {
+            ports.insert(port, vec![Buffer::SILENT]);
+        }
 
         NodeData::new(BoxedNode(Box::new(node)), ports)
     }
