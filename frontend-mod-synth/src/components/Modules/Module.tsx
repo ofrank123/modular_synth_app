@@ -1,15 +1,9 @@
 import React from "react";
-import type {
-  MathModuleData,
-  ModuleData,
-  OscillatorModuleData,
-  OutputModuleData,
-} from "../../util/ModuleData";
+import type { ModuleData } from "../../util/ModuleData";
 import { ModuleHeader } from "./ModuleHeader";
 import styles from "./Modules.module.scss";
-import { Oscillator } from "./Oscillator";
 import { Output } from "./Output";
-import { Math } from "./Math";
+import { GenericMod } from "./GenericMod";
 
 interface ModuleTextProps {
   children: React.ReactNode;
@@ -25,6 +19,7 @@ export const ModuleText = ({
       style={{
         marginLeft: justify === "right" ? "auto" : undefined,
         paddingRight: justify === "left" ? ".25rem" : undefined,
+        paddingLeft: justify === "right" ? ".4rem" : undefined,
       }}
     >
       {children}
@@ -54,19 +49,14 @@ interface ModuleProps {
 
 export const Module = ({ moduleData }: ModuleProps): JSX.Element => {
   const { type, x_pos, y_pos } = moduleData;
-  console.log(moduleData);
   return (
     <div className={styles.module} style={{ top: y_pos, left: x_pos }}>
       <ModuleHeader moduleData={moduleData} />
-      {
-        {
-          oscillator: (
-            <Oscillator module={moduleData as OscillatorModuleData} />
-          ),
-          math: <Math module={moduleData as MathModuleData} />,
-          output: <Output module={moduleData as OutputModuleData} />,
-        }[type]
-      }
+      {type === "output" ? (
+        <Output module={moduleData} />
+      ) : (
+        <GenericMod modData={moduleData} />
+      )}
     </div>
   );
 };

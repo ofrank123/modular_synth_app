@@ -9,6 +9,7 @@ pub struct MathInput<'a> {
 }
 
 pub struct MathNode {
+    p_attenuverters: [f32; 4],
     attenuverters: [f32; 4],
 }
 
@@ -16,18 +17,37 @@ impl MathNode {
     const OUT_PORTS: [u32; 5] = [0, 1, 2, 3, 4];
     pub fn new() -> Self {
         MathNode {
+            p_attenuverters: [0.0, 0.0, 0.0, 0.0],
             attenuverters: [0.0, 0.0, 0.0, 0.0],
         }
+    }
+
+    fn set_attenuverter(&mut self, channel: usize, value: f32) {
+        self.attenuverters[channel] = value / 128.0;
+    }
+
+    // Update the p_attenuverter array
+    fn update_prev_av(&mut self) {
+        for i in 0..self.attenuverters.len() {
+            self.p_attenuverters[i] = self.attenuverters[i];
+        }
+    }
+
+    fn get_av_value(&self, channel: usize, sample: usize) -> f32 {
+        let curr = self.attenuverters[channel];
+        let prev = self.p_attenuverters[channel];
+
+        prev + sample as f32 * ((curr - prev) / Buffer::LEN as f32)
     }
 }
 
 impl Node for MathNode {
     fn update_param(&mut self, name: &str, param: super::ParamValue) {
         match (name, param) {
-            ("attenuverter1", ParamValue::Num(n)) => self.attenuverters[0] = n,
-            ("attenuverter2", ParamValue::Num(n)) => self.attenuverters[1] = n,
-            ("attenuverter3", ParamValue::Num(n)) => self.attenuverters[2] = n,
-            ("attenuverter4", ParamValue::Num(n)) => self.attenuverters[3] = n,
+            ("attenuverter1", ParamValue::Num(n)) => self.set_attenuverter(0, n),
+            ("attenuverter2", ParamValue::Num(n)) => self.set_attenuverter(1, n),
+            ("attenuverter3", ParamValue::Num(n)) => self.set_attenuverter(2, n),
+            ("attenuverter4", ParamValue::Num(n)) => self.set_attenuverter(3, n),
             (_, _) => panic!("Invalid parameter update on Math node"),
         }
     }
@@ -102,7 +122,7 @@ impl Node for MathNode {
                 {
                     for i in 0..Buffer::LEN {
                         // Calculate next sample
-                        let sample = self.attenuverters[n] * in_buffer[i];
+                        let sample = self.get_av_value(n, i) * in_buffer[i];
                         // Set attenuverting output
                         out_buffer[i] = sample;
                         // Add to summing output
@@ -117,5 +137,7 @@ impl Node for MathNode {
                 }
             }
         }
+
+        self.update_prev_av()
     }
 }

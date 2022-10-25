@@ -1,8 +1,8 @@
 use wasm_bindgen::prelude::*;
 
 use audio_graph::node::{MathNode, OscNode, OutputSink, ParamValue};
+use audio_graph::Graph;
 use audio_graph::NodeData;
-use audio_graph::{console_log, Graph};
 use petgraph::graph::NodeIndex;
 use petgraph::{self as petgraph};
 
@@ -43,6 +43,7 @@ impl AudioManager {
         };
 
         am.send_message(Message::node_created(output_node_idx, "output"));
+        am.send_message(Message::mod_specs());
 
         let osc_node_idx = am.create_node("oscillator");
         am.connect(osc_node_idx, "Audio", output_node_idx, "Audio");

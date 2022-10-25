@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { ModuleTypes } from "../util/ModuleData";
-import { AudioEngineMessageOut, useAudioContext } from "./audioContext";
+import { useAudioContext } from "./audioContext";
 
 export const useReqAddNode = () => {
   const { sendMessage } = useAudioContext();

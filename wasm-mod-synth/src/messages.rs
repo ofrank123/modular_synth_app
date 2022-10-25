@@ -3,6 +3,7 @@ use std::{
     fmt,
 };
 
+use audio_graph::get_serialized_specs;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
@@ -134,6 +135,13 @@ impl Message {
 }
 
 impl Message {
+    pub fn mod_specs() -> Self {
+        Message {
+            name: "mod_specs".into(),
+            data: HashMap::from([("modules".to_string(), get_serialized_specs().into())]),
+        }
+    }
+
     pub fn node_created(node_id: u32, node_type: &str) -> Self {
         Message {
             name: "node_created".into(),

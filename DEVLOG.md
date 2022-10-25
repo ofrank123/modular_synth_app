@@ -61,3 +61,44 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 - Built out a Math module, which in its current form is a 4 way attenuverting mixer.  It's a bit based on the Maths module by Make Noise but isn't anywhere near that feature set yet, much more to be added.  It's an important utility module as it allows me to mix signals easily.
 - Having a demo with Ian tomorrow which should be fun.
 - While implementing the module, there were a lot of moving parts that had to come together.  I'd like, if possible, to specify the module entirely in Rust, and just have the frontend be able to figure out how to render it automatically.  This will of course lead to some restrictions, in frontend design, but I think I'm willing to sacrifice that for ease of use.  A refactor to this is due.
+
+# 25th Oct
+- Some notes on the specification language for the modules:
+    - The specification for a module will be a JSON object as follows:
+    ```json
+    module: {
+        name: string
+        rows: Row[]
+    }
+    Row: {
+        input: Port | undefined
+        output: Port | undefined
+        elements: RowElement[]
+    }
+    Port: {
+        name: string
+        id: number 
+    }
+    RowElement: Text | Slider | Selector
+    Text: {
+        data: string 
+    }
+    Slider: {
+        max: number
+        min: number
+        default: number
+        parameter: string
+    }
+    Selector: {
+        values: string[]
+        parameter: string
+    }
+    ```
+- Refactor has been made, making it much easier to specify the modules.  It does constrain design a bit but I'm not too concerned, as it's easily extendable.  It mostly allows me to think about all the connections a lot less.
+- Still need to make the "add module" buttons respond to what the backend reports as the module specifications.
+- Added lots more controls with my new powers.  Oscillator now has 4 types of wave, Sine, Square, Saw, Tri.  Controls now include pitch, coarse pitch offset, and fine pitch offset.  The base pitch is currently not modulatable.  I need to come up with some sort of standardized way of doing pitch information.  Probably will still the 1V/Oct standard from eurorack and just do .1CV/Oct or something.
+- Still want to add more controls to the oscillator, namely, pulse width modulation and phase modulation.
+- Right now the oscillator can go well into sub audio rate, but I still think it would be nice to have a dedicated LFO module, because it'd make things nicer.
+- Would like to add slewing to some of the Math module inputs
+- Next module will be a step sequencer, so I can get something semi-musical out of it!  I have some fun ideas, but for now just tempo, with 8 steps and pitch controls should be good.  Hence the need for standardization of pitch information.
+- Also met with Ian today, he seemed impressed at the current functionality and performance, which I'm happy about.

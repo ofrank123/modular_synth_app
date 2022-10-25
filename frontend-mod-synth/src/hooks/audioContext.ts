@@ -4,60 +4,19 @@ import {
   AudioProviderContext,
 } from "../components/Providers/AudioProvider";
 import { CustomWorkletNode } from "../util/CustomWorkletNode";
-import { ModuleData, ModuleTypes } from "../util/ModuleData";
+import { AllModules } from "../util/ModuleSpec/AllModules";
 import { setupAudio } from "../util/setupAudio";
 import { useUpdateGraph } from "./audioGraph";
+import { useModuleSpecs } from "./moduleSpec";
+import {
+  AudioEngineMessageIn,
+  AudioEngineMessageOut,
+} from "../util/EngineMessages";
 
 export const useAudioContext = () => useContext(AudioProviderContext);
 export const useAudioData = () => useContext(AudioDataContext);
 
-export type AudioEngineMessageOut =
-  | {
-      type: "update-node-param";
-      id: string;
-      name: string;
-      value: number | string;
-    }
-  | {
-      type: "remove-connection";
-      id: string;
-    }
-  | {
-      type: "add-connection";
-      in_node: string;
-      out_node: string;
-      in_port: string;
-      out_port: string;
-    }
-  | {
-      type: "add-module";
-      modType: ModuleTypes;
-    };
-
-export type AudioEngineMessageIn =
-  | {
-      type: "raw-samples";
-      data: number[];
-    }
-  | {
-      type: "node-created";
-      node_id: number;
-      node_type: ModuleData["type"];
-    }
-  | {
-      type: "node-connected";
-      edge_id: number;
-      out_node_id: number;
-      out_node_port: string;
-      in_node_id: number;
-      in_node_port: string;
-    }
-  | {
-      type: "connection-removed";
-      edge_id: number;
-    };
-
-// Some audio data our program may want to access
+// Audio data the frontend may want to access
 export interface AudioData {
   samples: number[]; // Most recent sample buffer
 }
@@ -82,6 +41,8 @@ export const useAudioContextSetup = (): {
 
   const { addConnection, addModule, removeConnection } = useUpdateGraph();
 
+  const { setModuleSpecs } = useModuleSpecs();
+
   const onMessage = useCallback(
     (message: AudioEngineMessageIn) => {
       if (message.type == "raw-samples") {
@@ -89,6 +50,9 @@ export const useAudioContextSetup = (): {
           ...oldAudioData,
           samples: message.data,
         }));
+      } else if (message.type == "mod-specs") {
+        // Handle module spec initialization event
+        setModuleSpecs(JSON.parse(message.data) as AllModules);
       } else if (message.type == "node-created") {
         // Handle node creation event
         addModule(message.node_id.toString(), message.node_type);
@@ -108,7 +72,7 @@ export const useAudioContextSetup = (): {
         });
       }
     },
-    [addModule, addConnection, removeConnection]
+    [addModule, addConnection, removeConnection, setModuleSpecs]
   );
 
   useEffect(() => {
@@ -137,6 +101,7 @@ export const useAudioContextSetup = (): {
   }, []);
 
   const sendMessage = useCallback((message: AudioEngineMessageOut) => {
+    console.log(message);
     if (node.current) {
       node.current.sendMessage(message);
     }

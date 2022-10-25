@@ -84,6 +84,12 @@ export class AudioProcessor extends AudioWorkletProcessor {
 
   handleMessage(message) {
     const handlers = {
+      mod_specs: () => {
+        this.port.postMessage({
+          type: "mod-specs",
+          data: message.get_data("modules").get_str(),
+        });
+      },
       node_created: () => {
         this.port.postMessage({
           type: "node-created",

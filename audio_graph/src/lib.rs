@@ -10,9 +10,11 @@ use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::{DfsPostOrder, GraphBase, Reversed, Visitable};
 use petgraph::Incoming;
 
+pub use mod_specs::*;
 pub use node::{BoxedNode, BoxedNodeSend};
 
 mod buffer;
+mod mod_specs;
 pub mod node;
 
 #[macro_export]
