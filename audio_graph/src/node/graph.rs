@@ -145,7 +145,7 @@ impl Node for GraphNode {
             .output_ports;
 
         for (out_node_port_id, out_node_bufs) in out_node_ports {
-            for out_bufs in output.get_mut(out_node_port_id) {
+            while let Some(out_bufs) = output.get_mut(out_node_port_id) {
                 for (out_buf, out_node_buf) in out_bufs.iter_mut().zip(out_node_bufs.iter_mut()) {
                     out_buf.copy_from_slice(out_node_buf);
                 }

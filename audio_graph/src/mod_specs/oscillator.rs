@@ -15,7 +15,7 @@ pub fn create_oscillator_spec() -> Module {
                         justify: Justify::Left,
                     }),
                     RowElement::Slider(Slider {
-                        min: -24,
+                        min: 0,
                         max: 128,
                         default: 69,
                         parameter: "base_pitch",
@@ -51,6 +51,22 @@ pub fn create_oscillator_spec() -> Module {
                         max: 100,
                         default: 0,
                         parameter: "fine_pitch",
+                    }),
+                ],
+            },
+            Row {
+                input: Some("Phase"),
+                output: None,
+                elements: vec![
+                    RowElement::Text(Text {
+                        data: "Phase",
+                        justify: Justify::Left,
+                    }),
+                    RowElement::Slider(Slider {
+                        min: -128,
+                        max: 128,
+                        default: 0,
+                        parameter: "phase",
                     }),
                 ],
             },

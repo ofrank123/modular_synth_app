@@ -5,18 +5,22 @@ use std::collections::HashMap;
 mod boxed;
 mod delay;
 mod graph;
+mod lfo;
 mod math;
 mod oscillator;
 mod output;
 mod pass;
+mod sequencer;
 
 pub use boxed::{BoxedNode, BoxedNodeSend};
 pub use delay::Delay;
 pub use graph::GraphNode;
+pub use lfo::LfoNode;
 pub use math::MathNode;
 pub use oscillator::OscNode;
 pub use output::OutputSink;
 pub use pass::Pass;
+pub use sequencer::SequencerNode;
 
 // Map from input port number to Input on that port
 pub type InputPorts = HashMap<u32, Input>;

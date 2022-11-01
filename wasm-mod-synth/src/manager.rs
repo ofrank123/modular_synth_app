@@ -1,8 +1,8 @@
 use wasm_bindgen::prelude::*;
 
-use audio_graph::node::{MathNode, OscNode, OutputSink, ParamValue};
-use audio_graph::Graph;
-use audio_graph::NodeData;
+use audio_graph::node::{OutputSink, ParamValue};
+use audio_graph::{new_mod, Graph, ModParams};
+use audio_graph::{BoxedNode, NodeData};
 use petgraph::graph::NodeIndex;
 use petgraph::{self as petgraph};
 
@@ -30,7 +30,9 @@ impl AudioManager {
         let output_buffer_ptr = buffer.as_ptr();
 
         let output_node = OutputSink::new(buffer);
-        let output_node_idx: u32 = graph.add_node(NodeData::boxed(output_node)).index() as u32;
+        let output_node_idx: u32 = graph
+            .add_node(NodeData::new_boxed(BoxedNode::new(output_node)))
+            .index() as u32;
 
         let mut am = AudioManager {
             message_queue_out: MessageQueue::new(),
@@ -45,22 +47,7 @@ impl AudioManager {
         am.send_message(Message::node_created(output_node_idx, "output"));
         am.send_message(Message::mod_specs());
 
-        let osc_node_idx = am.create_node("oscillator");
-        am.connect(osc_node_idx, "Audio", output_node_idx, "Audio");
-
         am
-    }
-
-    pub fn create_node(&mut self, node_type: &str) -> u32 {
-        let node_idx = match node_type {
-            "oscillator" => {
-                let osc_node = OscNode::new(self.sample_rate);
-                self.graph.add_node(NodeData::boxed(osc_node)).index() as u32
-            }
-            t => panic!("No such node type: {}", t),
-        };
-        self.send_message(Message::node_created(node_idx, node_type));
-        node_idx
     }
 
     pub fn connect(
@@ -174,17 +161,16 @@ impl AudioManager {
                 }
                 "add-module" => {
                     let mod_type = message.get_data("modType".to_string()).get_str();
-                    let node_idx = match mod_type.as_str() {
-                        "oscillator" => {
-                            let osc_node = OscNode::new(self.sample_rate);
-                            self.graph.add_node(NodeData::boxed(osc_node)).index() as u32
-                        }
-                        "math" => {
-                            let math_node = MathNode::new();
-                            self.graph.add_node(NodeData::boxed(math_node)).index() as u32
-                        }
-                        t => panic!("No such node type: {}", t),
+
+                    let mod_params = ModParams {
+                        sample_rate: self.sample_rate,
                     };
+                    // Create module
+                    let new_node = new_mod(mod_type.as_str(), mod_params);
+
+                    // Add module, get index
+                    let node_idx =
+                        self.graph.add_node(NodeData::new_boxed(new_node)).index() as u32;
 
                     self.message_queue_out
                         .push(Message::node_created(node_idx, mod_type.as_str()));

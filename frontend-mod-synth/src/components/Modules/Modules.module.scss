@@ -22,6 +22,7 @@
     padding: .25rem;
     border-top-left-radius: $border-radius-inner;
     border-top-right-radius: $border-radius-inner;
+    display: flex;
     cursor: pointer;
     &:active {
         cursor: move;

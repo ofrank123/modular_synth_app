@@ -10,10 +10,12 @@ use petgraph::stable_graph::EdgeIndex;
 use petgraph::visit::{DfsPostOrder, GraphBase, Reversed, Visitable};
 use petgraph::Incoming;
 
+pub use dsp::*;
 pub use mod_specs::*;
 pub use node::{BoxedNode, BoxedNodeSend};
 
 mod buffer;
+mod dsp;
 mod mod_specs;
 pub mod node;
 
@@ -99,16 +101,13 @@ impl<T> NodeData<T> {
 
 impl NodeData<BoxedNode> {
     /// The same as **new**, but boxes the given node data before storing it.
-    pub fn boxed<T>(node: T) -> Self
-    where
-        T: 'static + Node,
-    {
+    pub fn new_boxed(node: BoxedNode) -> Self {
         let mut ports = HashMap::new();
         for &port in node.get_output_ports() {
             ports.insert(port, vec![Buffer::SILENT]);
         }
 
-        NodeData::new(BoxedNode(Box::new(node)), ports)
+        NodeData::new(node, ports)
     }
 }
 

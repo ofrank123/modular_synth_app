@@ -101,4 +101,10 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 - Right now the oscillator can go well into sub audio rate, but I still think it would be nice to have a dedicated LFO module, because it'd make things nicer.
 - Would like to add slewing to some of the Math module inputs
 - Next module will be a step sequencer, so I can get something semi-musical out of it!  I have some fun ideas, but for now just tempo, with 8 steps and pitch controls should be good.  Hence the need for standardization of pitch information.
-- Also met with Ian today, he seemed impressed at the current functionality and performance, which I'm happy about.
+- Also met with Ian today, he seemed impressed at the current functionality and performance, which I'm happy about.S
+
+# 31 Oct
+- Lots of deadlines done.  Added a phase input.  Nice to see that feeding back a sine wave with an input of 1 actually gives me white noise.
+
+# 1 Nov
+- Added an LFO Module, sample and hold should be next.  Also some sort of slew limiter on the math module inputs 1 and 2.

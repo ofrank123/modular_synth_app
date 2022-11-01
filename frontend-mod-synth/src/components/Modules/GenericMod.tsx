@@ -72,6 +72,8 @@ export const GenericMod = ({
     return <></>;
   }
 
+  console.log(moduleSpecs);
+
   return (
     <ModuleBody>
       {spec.rows.map((row, row_idx) => (

@@ -1,20 +1,43 @@
 use serde::Serialize;
 use ts_rs::TS;
 
+mod lfo;
 mod math;
 mod oscillator;
 
+use lfo::create_lfo_spec;
 use math::create_math_spec;
 use oscillator::create_oscillator_spec;
 
+use crate::{
+    node::{LfoNode, MathNode, OscNode},
+    BoxedNode, Node,
+};
+
+pub struct ModParams {
+    pub sample_rate: f64,
+}
+
+// Modules must be registered here
 pub fn get_serialized_specs() -> String {
     let osc_spec = create_oscillator_spec();
     let math_spec = create_math_spec();
+    let lfo_spec = create_lfo_spec();
 
     serde_json::to_string(&AllModules {
-        data: vec![osc_spec, math_spec],
+        data: vec![osc_spec, math_spec, lfo_spec],
     })
     .unwrap()
+}
+
+// And here
+pub fn new_mod(t_name: &str, mod_params: ModParams) -> BoxedNode {
+    match t_name {
+        "math" => BoxedNode::new(MathNode::new()),
+        "oscillator" => BoxedNode::new(OscNode::new(mod_params.sample_rate)),
+        "lfo" => BoxedNode::new(LfoNode::new(mod_params.sample_rate)),
+        _ => panic!("No such module"),
+    }
 }
 
 #[derive(Debug, Serialize, Clone, TS)]
@@ -22,6 +45,8 @@ pub fn get_serialized_specs() -> String {
 pub struct AllModules {
     pub data: Vec<Module>,
 }
+
+trait SizedNode: Node + Sized {}
 
 #[derive(Debug, Serialize, Clone, TS)]
 #[ts(export)]

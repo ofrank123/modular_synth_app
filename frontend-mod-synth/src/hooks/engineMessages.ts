@@ -1,12 +1,11 @@
 import { useCallback } from "react";
-import { ModuleTypes } from "../util/ModuleData";
 import { useAudioContext } from "./audioContext";
 
 export const useReqAddNode = () => {
   const { sendMessage } = useAudioContext();
 
   return useCallback(
-    (type: ModuleTypes) => {
+    (type: string) => {
       sendMessage({ type: "add-module", modType: type });
     },
     [sendMessage]

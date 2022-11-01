@@ -1,4 +1,4 @@
-import { ModuleData, ModuleTypes } from "../util/ModuleData";
+import { ModuleData } from "../util/ModuleData";
 
 export type AudioEngineMessageOut =
   | {
@@ -20,7 +20,7 @@ export type AudioEngineMessageOut =
     }
   | {
       type: "add-module";
-      modType: ModuleTypes;
+      modType: string;
     };
 
 export type AudioEngineMessageIn =

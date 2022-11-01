@@ -14,6 +14,7 @@ enum OscType {
 struct Oscillator {
     sample_rate: f32,
     phase: f32,
+    phase_offset: f32,
     base_freq: f32,
     coarse_freq: f32,
     coarse_freq_offset: f32,
@@ -31,6 +32,7 @@ impl Oscillator {
         return Oscillator {
             sample_rate,
             phase: 0.0,
+            phase_offset: 0.0,
             base_freq: 69.0,
             coarse_freq: 0.0,
             coarse_freq_offset: 0.0,
@@ -58,7 +60,7 @@ impl Oscillator {
         // Clip Frequency
         let freq = self.get_freq().max(0.0);
 
-        self.phase += (2.0 * PI * freq) / self.sample_rate;
+        self.phase += ((2.0 * PI * freq) / self.sample_rate) + self.phase_offset;
 
         if self.phase > 4.0 * PI || self.phase < 0.0 {
             console_log!("{}", self.phase);
@@ -110,6 +112,7 @@ impl Node for OscNode {
             ("base_pitch", ParamValue::Num(n)) => self.oscillator.base_freq = n,
             ("coarse_pitch", ParamValue::Num(n)) => self.oscillator.coarse_freq = n,
             ("fine_pitch", ParamValue::Num(n)) => self.oscillator.fine_freq = n,
+            ("phase", ParamValue::Num(n)) => self.oscillator.phase = n / 128.0,
             ("type", ParamValue::Str(s)) => match s.as_str() {
                 "sine" => self.oscillator.osc_type = OscType::Sine,
                 "square" => self.oscillator.osc_type = OscType::Square,
@@ -130,6 +133,7 @@ impl Node for OscNode {
             (PortType::Out, "Audio") => 0,
             (PortType::In, "Coarse Pitch") => 0,
             (PortType::In, "Fine Pitch") => 1,
+            (PortType::In, "Phase") => 2,
             (t, n) => port_panic!(t, n),
         }
     }
@@ -145,12 +149,18 @@ impl Node for OscNode {
             None => &Buffer::SILENT,
         };
 
+        let phase_in = match inputs.get(&2) {
+            Some(n) => &n.buffers()[0],
+            None => &Buffer::SILENT,
+        };
+
         let output_bufs = output.get_mut(&0).expect(NO_PORT);
 
         for buffer in output_bufs {
             for i in 0..Buffer::LEN {
                 self.oscillator.coarse_freq_offset = coarse_in[i] * 12.0;
                 self.oscillator.fine_freq_offset = fine_in[i] * 100.0;
+                self.oscillator.phase_offset = phase_in[i];
                 let next_sample = self.oscillator.next();
                 buffer[i] = next_sample;
             }
