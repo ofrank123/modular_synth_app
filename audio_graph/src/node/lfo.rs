@@ -3,8 +3,7 @@ use std::f32::consts::PI;
 use rand::rngs::StdRng;
 use rand::{RngCore, SeedableRng};
 
-use crate::dsp::oscillators::sine_sample;
-use crate::oscillators::{saw_sample, square_sample, tri_sample};
+use crate::oscillators::{naive_saw_sample, naive_square_sample, naive_tri_sample, sine_sample};
 use crate::{console_log, port_panic, Buffer, Node};
 
 use super::{InputPorts, OutputPorts, ParamValue, PortType, NO_PORT};
@@ -45,9 +44,9 @@ impl Lfo {
     fn next(&mut self) -> f32 {
         let sample = match self.lfo_type {
             LFOType::Sine => sine_sample(self.phase),
-            LFOType::Square => square_sample(self.phase),
-            LFOType::Saw => saw_sample(self.phase),
-            LFOType::Triangle => tri_sample(self.phase),
+            LFOType::Square => naive_square_sample(self.phase),
+            LFOType::Saw => naive_saw_sample(self.phase),
+            LFOType::Triangle => naive_tri_sample(self.phase),
             LFOType::Noise => {
                 (((self.rng.next_u32() as f64 / std::u32::MAX as f64) * 2.0) - 1.0) as f32
             }
@@ -84,7 +83,9 @@ impl LfoNode {
 impl Node for LfoNode {
     fn update_param(&mut self, name: &str, param: ParamValue) {
         match (name, param) {
-            ("base_pitch", ParamValue::Num(n)) => self.lfo.base_freq = n / 10.0,
+            ("base_pitch", ParamValue::Num(n)) => {
+                self.lfo.base_freq = (n / 1000.0).powf(3.0) * 100.0
+            }
             ("type", ParamValue::Str(s)) => match s.as_str() {
                 "sine" => self.lfo.lfo_type = LFOType::Sine,
                 "square" => self.lfo.lfo_type = LFOType::Square,

@@ -11,6 +11,7 @@ mod oscillator;
 mod output;
 mod pass;
 mod sequencer;
+mod shq;
 
 pub use boxed::{BoxedNode, BoxedNodeSend};
 pub use delay::Delay;
@@ -21,6 +22,7 @@ pub use oscillator::OscNode;
 pub use output::OutputSink;
 pub use pass::Pass;
 pub use sequencer::SequencerNode;
+pub use shq::ShqNode;
 
 // Map from input port number to Input on that port
 pub type InputPorts = HashMap<u32, Input>;
@@ -68,11 +70,11 @@ pub trait Node {
     fn get_port(&self, name: &str, port_type: PortType) -> u32;
     fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts);
 
-    fn update_param(&mut self, name: &str, value: ParamValue) {
+    fn update_param(&mut self, name: &str, param: ParamValue) {
         console_log!(
             "Node does not handle updates, received: {} {:?}",
             name,
-            value
+            param
         );
     }
 }

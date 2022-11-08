@@ -1,12 +1,19 @@
 use std::f32::consts::PI;
 
-use crate::{console_log, port_panic, Buffer, Node};
+use crate::{
+    oscillators::{
+        naive_saw_sample, naive_square_sample, naive_tri_sample, poly_blep, sine_sample,
+    },
+    port_panic, Buffer, Node,
+};
 
 use super::{InputPorts, OutputPorts, ParamValue, PortType, NO_PORT};
 
 enum OscType {
     Sine,
+    NSquare,
     Square,
+    NSaw,
     Saw,
     Triangle,
 }
@@ -50,46 +57,39 @@ impl Oscillator {
     }
 
     fn next(&mut self) -> f32 {
-        let sample = match self.osc_type {
-            OscType::Sine => self.sine_sample(),
-            OscType::Square => self.square_sample(),
-            OscType::Saw => self.saw_sample(),
-            OscType::Triangle => self.tri_sample(),
-        };
-
         // Clip Frequency
         let freq = self.get_freq().max(0.0);
 
-        self.phase += ((2.0 * PI * freq) / self.sample_rate) + self.phase_offset;
+        let phase_inc = ((2.0 * PI * freq) / self.sample_rate) + self.phase_offset;
 
-        if self.phase > 4.0 * PI || self.phase < 0.0 {
-            console_log!("{}", self.phase);
-        }
+        self.phase = (self.phase + phase_inc).rem_euclid(2.0 * PI);
 
-        self.phase = self.phase.rem_euclid(2.0 * PI);
+        let t = self.phase / (2.0 * PI);
+
+        let sample = match self.osc_type {
+            OscType::Sine => sine_sample(self.phase),
+            OscType::NSaw => {
+                let s = naive_saw_sample(self.phase);
+                s
+            }
+            OscType::Saw => {
+                let s = naive_saw_sample(self.phase);
+                s - poly_blep(phase_inc, t)
+            }
+            OscType::NSquare => {
+                let s = naive_square_sample(self.phase);
+                s
+            }
+            OscType::Square => {
+                let mut s = naive_square_sample(self.phase);
+                s += poly_blep(phase_inc, t);
+                s -= poly_blep(phase_inc, (t + 0.5).rem_euclid(1.0));
+                s
+            }
+            OscType::Triangle => naive_tri_sample(self.phase),
+        };
 
         sample
-    }
-
-    fn sine_sample(&self) -> f32 {
-        self.phase.sin()
-    }
-    fn square_sample(&self) -> f32 {
-        if self.phase > PI {
-            1.0
-        } else {
-            -1.0
-        }
-    }
-    fn saw_sample(&self) -> f32 {
-        ((self.phase / PI) - 1.0) * -1.0
-    }
-    fn tri_sample(&self) -> f32 {
-        if self.phase < PI {
-            (2.0 * self.phase / PI) - 1.0
-        } else {
-            ((-2.0 * self.phase) / PI) + 3.0
-        }
     }
 }
 
@@ -115,8 +115,10 @@ impl Node for OscNode {
             ("phase", ParamValue::Num(n)) => self.oscillator.phase = n / 128.0,
             ("type", ParamValue::Str(s)) => match s.as_str() {
                 "sine" => self.oscillator.osc_type = OscType::Sine,
+                "nsquare" => self.oscillator.osc_type = OscType::NSquare,
                 "square" => self.oscillator.osc_type = OscType::Square,
                 "saw" => self.oscillator.osc_type = OscType::Saw,
+                "nsaw" => self.oscillator.osc_type = OscType::NSaw,
                 "tri" => self.oscillator.osc_type = OscType::Triangle,
                 _ => panic!("Invalid osc type"),
             },

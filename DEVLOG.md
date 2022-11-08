@@ -108,3 +108,7 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 
 # 1 Nov
 - Added an LFO Module, sample and hold should be next.  Also some sort of slew limiter on the math module inputs 1 and 2.
+
+# 8th Nov
+- Added a S&H module.  Want to add quantization, but allows for some simple (completely untuned) melodies to be played.  You can also hook the output up to multiple offset oscillators and it'll play chords for you.  Sorta fun.
+- Added PolyBLEP to my discontinuous oscillators (except triangle, but I'm not too concerned about it).  I think something like MinBLEP would be better but it's a much trickier implementation.

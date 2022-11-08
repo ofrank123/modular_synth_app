@@ -89,8 +89,16 @@ pub fn create_oscillator_spec() -> Module {
                                 value: "square",
                             },
                             SelectorOption {
+                                name: "Naive Square",
+                                value: "nsquare",
+                            },
+                            SelectorOption {
                                 name: "Saw",
                                 value: "saw",
+                            },
+                            SelectorOption {
+                                name: "Naive Saw",
+                                value: "nsaw",
                             },
                             SelectorOption {
                                 name: "Triangle",
