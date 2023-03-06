@@ -83,9 +83,7 @@ impl LfoNode {
 impl Node for LfoNode {
     fn update_param(&mut self, name: &str, param: ParamValue) {
         match (name, param) {
-            ("base_pitch", ParamValue::Num(n)) => {
-                self.lfo.base_freq = (n / 1000.0).powf(3.0) * 100.0
-            }
+            ("base_pitch", ParamValue::Num(n)) => self.lfo.base_freq = n,
             ("type", ParamValue::Str(s)) => match s.as_str() {
                 "sine" => self.lfo.lfo_type = LFOType::Sine,
                 "square" => self.lfo.lfo_type = LFOType::Square,

@@ -112,3 +112,8 @@ Been feeling a bit "in the hole" doing so much work on this.  Going to try and w
 # 8th Nov
 - Added a S&H module.  Want to add quantization, but allows for some simple (completely untuned) melodies to be played.  You can also hook the output up to multiple offset oscillators and it'll play chords for you.  Sorta fun.
 - Added PolyBLEP to my discontinuous oscillators (except triangle, but I'm not too concerned about it).  I think something like MinBLEP would be better but it's a much trickier implementation.
+
+# 21st Nov
+- Made mappings of knobs nicer using some arcane math.
+- Haven't had a ton of time owing to deadlines.
+- Discovered a bug when too many entities are spawned.  The WASM memory buffer needs to grow, which works fine, but then the old pointers Javascript has are invalidated.  Need to figure out some sort of solution to this, although it seems tricky.

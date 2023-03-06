@@ -1,3 +1,4 @@
+import { setFips } from "crypto";
 import React from "react";
 import { useAudioContext } from "../../hooks/audioContext";
 import { useModuleSpecs } from "../../hooks/moduleSpec";
@@ -11,9 +12,58 @@ interface GenericModProps {
   modData: ModuleData;
 }
 
+const sliderToEngine = ({
+  val,
+  steps,
+  order,
+  range,
+  inverts,
+}: {
+  val: number;
+  steps: number;
+  order: number;
+  range: number;
+  inverts: boolean;
+}): number => {
+  if (inverts) {
+    if (val >= steps / 2) {
+      return range * Math.pow((2 * val) / steps - 1, order);
+    } else {
+      return -range * Math.pow(Math.abs((2 * val) / steps - 1), order);
+    }
+  } else {
+    return range * Math.pow(val / steps, order);
+  }
+};
+
+const engineToSlider = ({
+  val,
+  steps,
+  order,
+  range,
+  inverts,
+}: {
+  val: number;
+  steps: number;
+  order: number;
+  range: number;
+  inverts: boolean;
+}): number => {
+  if (inverts) {
+    if (val >= 0) {
+      return (steps * (Math.pow(val / range, 1 / order) + 1)) / 2;
+    } else {
+      return (steps * (-Math.pow(Math.abs(val / range), 1 / order) + 1)) / 2;
+    }
+  } else {
+    let res = steps * Math.pow(val / range, 1 / order);
+    console.log(res);
+    return res;
+  }
+};
+
 const RowEl = ({ id, el }: { id: string; el: RowElement }) => {
   const { sendMessage } = useAudioContext();
-
   switch (el.type) {
     case "TEXT":
       return (
@@ -21,22 +71,48 @@ const RowEl = ({ id, el }: { id: string; el: RowElement }) => {
           {el.data}
         </ModuleText>
       );
-    case "SLIDER":
+    case "SLIDER": {
+      const { steps, order, range, inverts } = el;
+
       return (
         <Slider
-          min={el.min}
-          defaultValue={el.default}
-          max={el.max}
+          min={0}
+          defaultValue={engineToSlider({
+            val: el.default,
+            steps,
+            order,
+            range,
+            inverts,
+          })}
+          max={el.steps}
           onChange={(value) => {
+            console.log(
+              value +
+                " -> " +
+                sliderToEngine({
+                  val: value,
+                  steps,
+                  order,
+                  range,
+                  inverts,
+                })
+            );
             sendMessage({
               type: "update-node-param",
               id,
               name: el.parameter,
-              value,
+              value: sliderToEngine({
+                val: value,
+                steps,
+                order,
+                range,
+                inverts,
+              }),
             });
           }}
         />
       );
+    }
     case "SELECTOR":
       return (
         <select

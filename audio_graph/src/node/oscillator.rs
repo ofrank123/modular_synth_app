@@ -21,6 +21,7 @@ enum OscType {
 struct Oscillator {
     sample_rate: f32,
     phase: f32,
+    phase_param_offset: f32,
     phase_offset: f32,
     base_freq: f32,
     coarse_freq: f32,
@@ -39,8 +40,9 @@ impl Oscillator {
         return Oscillator {
             sample_rate,
             phase: 0.0,
+            phase_param_offset: 0.0,
             phase_offset: 0.0,
-            base_freq: 69.0,
+            base_freq: 0.0,
             coarse_freq: 0.0,
             coarse_freq_offset: 0.0,
             fine_freq: 0.0,
@@ -50,10 +52,11 @@ impl Oscillator {
     }
 
     fn get_freq(&mut self) -> f32 {
+        let base_midi = (self.base_freq + 1.0) * 64.0;
         let coarse = (self.coarse_freq + self.coarse_freq_offset).clamp(-12.0, 12.0);
         let fine = (self.fine_freq + self.fine_freq_offset).clamp(-100.0, 100.0);
 
-        freq_from_midi(self.base_freq + coarse + (fine / 100.0))
+        freq_from_midi(base_midi + coarse + (fine / 100.0))
     }
 
     fn next(&mut self) -> f32 {
@@ -112,7 +115,7 @@ impl Node for OscNode {
             ("base_pitch", ParamValue::Num(n)) => self.oscillator.base_freq = n,
             ("coarse_pitch", ParamValue::Num(n)) => self.oscillator.coarse_freq = n,
             ("fine_pitch", ParamValue::Num(n)) => self.oscillator.fine_freq = n,
-            ("phase", ParamValue::Num(n)) => self.oscillator.phase = n / 128.0,
+            ("phase", ParamValue::Num(n)) => self.oscillator.phase_param_offset = n * 2.0 * PI,
             ("type", ParamValue::Str(s)) => match s.as_str() {
                 "sine" => self.oscillator.osc_type = OscType::Sine,
                 "nsquare" => self.oscillator.osc_type = OscType::NSquare,
@@ -162,7 +165,7 @@ impl Node for OscNode {
             for i in 0..Buffer::LEN {
                 self.oscillator.coarse_freq_offset = coarse_in[i] * 12.0;
                 self.oscillator.fine_freq_offset = fine_in[i] * 100.0;
-                self.oscillator.phase_offset = phase_in[i];
+                self.oscillator.phase_offset = phase_in[i] * 2.0 * PI;
                 let next_sample = self.oscillator.next();
                 buffer[i] = next_sample;
             }

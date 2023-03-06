@@ -29,6 +29,7 @@ export const useAudioContextSetup = (): {
   toggle: () => void;
   sendMessage: (message: AudioEngineMessageOut) => void;
   audioData: AudioData;
+  recorder: MediaRecorder | null;
 } => {
   const [connected, setConnected] = useState(false);
   const [userGestured, setUserGestured] = useState(false);
@@ -36,8 +37,9 @@ export const useAudioContextSetup = (): {
     samples: [],
   });
 
-  const ctx = useRef<AudioContext | null>();
-  const node = useRef<CustomWorkletNode | null>();
+  const ctx = useRef<AudioContext | null>(null);
+  const node = useRef<CustomWorkletNode | null>(null);
+  const recorder = useRef<MediaRecorder | null>(null);
 
   const { addConnection, addModule, removeConnection } = useUpdateGraph();
 
@@ -86,9 +88,10 @@ export const useAudioContextSetup = (): {
       } else {
         // Initial connection
         setupAudio(onMessage, connected).then(
-          ({ ctx: newCtx, node: newNode }) => {
+          ({ ctx: newCtx, node: newNode, recorder: newRecorder }) => {
             ctx.current = newCtx;
             node.current = newNode;
+            recorder.current = newRecorder;
           }
         );
       }
@@ -107,5 +110,11 @@ export const useAudioContextSetup = (): {
     }
   }, []);
 
-  return { connected, toggle, sendMessage, audioData };
+  return {
+    connected,
+    toggle,
+    sendMessage,
+    audioData,
+    recorder: recorder.current,
+  };
 };

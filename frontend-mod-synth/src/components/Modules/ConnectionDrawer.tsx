@@ -146,7 +146,6 @@ const MouseConnection = ({
 
 export const ConnectionDrawer = (): JSX.Element => {
   const connections = useConnections();
-  const { start } = useNodeConnector();
 
   const ref = useRef<SVGSVGElement | null>(null);
   const [{ offset_x, offset_y }, setOffset] = useState({

@@ -94,9 +94,11 @@ pub struct Text {
 #[derive(Debug, Serialize, Clone, TS)]
 #[ts(export)]
 pub struct Slider {
-    pub max: i32,
-    pub min: i32,
-    pub default: i32,
+    pub steps: i32,
+    pub order: i32,
+    pub range: f32,
+    pub inverts: bool,
+    pub default: f32,
     pub parameter: &'static str,
 }
 

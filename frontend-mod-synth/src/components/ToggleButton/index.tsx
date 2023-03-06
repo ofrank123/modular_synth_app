@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useAudioContext } from "../../hooks/audioContext";
 import { useReqAddConnection } from "../../hooks/engineMessages";
+import { RecordButton } from "../Record";
 
 export const ToggleButton = (): JSX.Element => {
   const { toggle, state } = useAudioContext();
@@ -14,6 +15,7 @@ export const ToggleButton = (): JSX.Element => {
       >
         {state === "play" ? "Pause" : "Play"}
       </button>
+      <RecordButton />
     </>
   );
 };

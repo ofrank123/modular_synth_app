@@ -1,7 +1,7 @@
 import {
   AudioEngineMessageOut,
   AudioEngineMessageIn,
-} from "../hooks/audioContext";
+} from "../util/EngineMessages";
 
 export interface CustomWorkletNode extends AudioWorkletNode {
   onOtherMessage: (message: AudioEngineMessageIn) => void;

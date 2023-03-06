@@ -23,7 +23,7 @@ impl MathNode {
     }
 
     fn set_attenuverter(&mut self, channel: usize, value: f32) {
-        self.attenuverters[channel] = value / 128.0;
+        self.attenuverters[channel] = value;
     }
 
     // Update the p_attenuverter array
