@@ -57,7 +57,6 @@ const engineToSlider = ({
     }
   } else {
     let res = steps * Math.pow(val / range, 1 / order);
-    console.log(res);
     return res;
   }
 };
@@ -85,18 +84,13 @@ const RowEl = ({ id, el }: { id: string; el: RowElement }) => {
             inverts,
           })}
           max={el.steps}
+          sliderToEngine={(val) =>
+            sliderToEngine({ val, steps, order, range, inverts })
+          }
+          engineToSlider={(val) =>
+            engineToSlider({ val, steps, order, range, inverts })
+          }
           onChange={(value) => {
-            console.log(
-              value +
-                " -> " +
-                sliderToEngine({
-                  val: value,
-                  steps,
-                  order,
-                  range,
-                  inverts,
-                })
-            );
             sendMessage({
               type: "update-node-param",
               id,
@@ -147,8 +141,6 @@ export const GenericMod = ({
   if (!spec) {
     return <></>;
   }
-
-  console.log(moduleSpecs);
 
   return (
     <ModuleBody>

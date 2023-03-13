@@ -10,18 +10,16 @@ mod math;
 mod oscillator;
 mod output;
 mod pass;
-mod sequencer;
 mod shq;
 
 pub use boxed::{BoxedNode, BoxedNodeSend};
-pub use delay::Delay;
+pub use delay::DelayNode;
 pub use graph::GraphNode;
 pub use lfo::LfoNode;
 pub use math::MathNode;
 pub use oscillator::OscNode;
 pub use output::OutputSink;
 pub use pass::Pass;
-pub use sequencer::SequencerNode;
 pub use shq::ShqNode;
 
 // Map from input port number to Input on that port

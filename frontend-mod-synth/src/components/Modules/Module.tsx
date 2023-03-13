@@ -20,6 +20,8 @@ export const ModuleText = ({
         marginLeft: justify === "right" ? "auto" : undefined,
         paddingRight: justify === "left" ? ".25rem" : undefined,
         paddingLeft: justify === "right" ? ".4rem" : undefined,
+        marginTop: "auto",
+        marginBottom: "auto",
       }}
     >
       {children}
@@ -50,7 +52,13 @@ interface ModuleProps {
 export const Module = ({ moduleData }: ModuleProps): JSX.Element => {
   const { type, x_pos, y_pos } = moduleData;
   return (
-    <div className={styles.module} style={{ top: y_pos, left: x_pos }}>
+    <div
+      className={styles.module}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+      }}
+      style={{ top: y_pos, left: x_pos }}
+    >
       <ModuleHeader moduleData={moduleData} />
       {type === "output" ? (
         <Output module={moduleData} />

@@ -4,9 +4,11 @@ import { Connection } from "../../util/Connection";
 import styles from "./Modules.module.scss";
 import { useReqRemoveConnection } from "../../hooks/engineMessages";
 import { useNodeConnector } from "../../hooks/nodeConnector";
+import type { Transform } from "../Modules";
 
 interface ConnectionProps {
   connection: Connection;
+  transform: Transform;
   offset_x: number;
   offset_y: number;
 }
@@ -26,6 +28,7 @@ const bezierCurve = (
 
 const Connection = ({
   connection,
+  transform,
   offset_x,
   offset_y,
 }: ConnectionProps): JSX.Element => {
@@ -50,18 +53,28 @@ const Connection = ({
       .getElementById(`port_${out_node}_${out_port}_OUT`)
       ?.getBoundingClientRect() || { x: 0, y: 0 };
     setCoords({
-      in_x: in_x - offset_x + 3,
-      in_y: in_y - offset_y + 9.5,
-      out_x: out_x - offset_x + 15,
-      out_y: out_y - offset_y + 9.5,
+      in_x: in_x - offset_x + 3 * transform.scale,
+      in_y: in_y - offset_y + 9.5 * transform.scale,
+      out_x: out_x - offset_x + 15 * transform.scale,
+      out_y: out_y - offset_y + 9.5 * transform.scale,
     });
-  }, [in_node, in_port, out_node, out_port, offset_x, offset_y, modules]);
+  }, [
+    in_node,
+    in_port,
+    out_node,
+    out_port,
+    offset_x,
+    offset_y,
+    modules,
+    transform,
+  ]);
 
   return (
     <path
       onClick={() => {
         removeConnection(id);
       }}
+      style={{ strokeWidth: `${2 * transform.scale}px` }}
       d={bezierCurve(out_x, out_y, in_x, in_y)}
     />
   );
@@ -70,9 +83,11 @@ const Connection = ({
 const MouseConnection = ({
   offsetX,
   offsetY,
+  transform,
 }: {
   offsetX: number;
   offsetY: number;
+  transform: Transform;
 }): JSX.Element => {
   const { start } = useNodeConnector();
   const [{ mouse_x, mouse_y }, setMouseCoords] = useState({
@@ -111,8 +126,8 @@ const MouseConnection = ({
           .getElementById(`port_${start.node}_${start.port}_IN`)
           ?.getBoundingClientRect() || { x: 0, y: 0 };
         setCoords({
-          in_x: in_x - offsetX + 3,
-          in_y: in_y - offsetY + 9.5,
+          in_x: in_x - offsetX + 3 * transform.scale,
+          in_y: in_y - offsetY + 9.5 * transform.scale,
           out_x: mouse_x - offsetX,
           out_y: mouse_y - offsetY,
         });
@@ -123,20 +138,21 @@ const MouseConnection = ({
         setCoords({
           in_x: mouse_x - offsetX,
           in_y: mouse_y - offsetY,
-          out_x: out_x - offsetX + 15,
-          out_y: out_y - offsetY + 9.5,
+          out_x: out_x - offsetX + 15 * transform.scale,
+          out_y: out_y - offsetY + 9.5 * transform.scale,
         });
       }
     } else {
       setCoords(null);
     }
-  }, [mouse_x, mouse_y, offsetX, offsetY, start]);
+  }, [mouse_x, mouse_y, offsetX, offsetY, start, transform]);
 
   if (start && coords) {
     const { out_x, out_y, in_x, in_y } = coords;
     return (
       <path
         className={styles.mouseConnection}
+        style={{ strokeWidth: `${2 * transform.scale}px` }}
         d={bezierCurve(out_x, out_y, in_x, in_y)}
       />
     );
@@ -144,7 +160,11 @@ const MouseConnection = ({
   return <></>;
 };
 
-export const ConnectionDrawer = (): JSX.Element => {
+export const ConnectionDrawer = ({
+  transform,
+}: {
+  transform: Transform;
+}): JSX.Element => {
   const connections = useConnections();
 
   const ref = useRef<SVGSVGElement | null>(null);
@@ -173,10 +193,15 @@ export const ConnectionDrawer = (): JSX.Element => {
         <Connection
           key={conn.id}
           connection={conn}
+          transform={transform}
           {...{ offset_x, offset_y }}
         />
       ))}
-      <MouseConnection offsetX={offset_x} offsetY={offset_y} />
+      <MouseConnection
+        offsetX={offset_x}
+        offsetY={offset_y}
+        transform={transform}
+      />
     </svg>
   );
 };

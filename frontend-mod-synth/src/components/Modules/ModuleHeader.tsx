@@ -20,7 +20,9 @@ export const ModuleHeader = ({
 
   const onMouseDown: React.MouseEventHandler<HTMLDivElement> = useCallback(
     (e) => {
+      e.stopPropagation();
       const mouseMoveListener = (e: MouseEvent) => {
+        e.stopPropagation();
         moveModule(
           modId,
           posRef.current.x_pos + e.movementX,

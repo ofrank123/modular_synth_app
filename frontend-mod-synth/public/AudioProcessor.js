@@ -32,6 +32,7 @@ export class AudioProcessor extends AudioWorkletProcessor {
   onmessage(event) {
     if (event.type === "send-wasm-module") {
       init(WebAssembly.compile(event.wasmBytes)).then((result) => {
+        console.log("making new audio manager");
         init_wasm();
         this.memory = result.memory;
         this.manager = AudioManager.new(event.sampleRate);
@@ -57,6 +58,7 @@ export class AudioProcessor extends AudioWorkletProcessor {
           msg.add_param(key, param);
         }
       }
+
       this.manager.add_message(msg);
     }
   }
@@ -67,13 +69,18 @@ export class AudioProcessor extends AudioWorkletProcessor {
         this.handleMessage(this.manager.next_message());
       }
 
+      // Could grow memory
       this.manager.process();
+
       outputs[0].forEach((channel) => {
         for (let i = 0; i < channel.length; i++) {
           channel[i] = this.buffer[i];
+          this.send_buffer.push(this.buffer[i]);
         }
       });
-      this.send_buffer.push(...this.buffer);
+
+      this.buffer_ptr = this.manager.get_output_ptr();
+      this.buffer = new Float32Array(this.memory.buffer, this.buffer_ptr, 128);
     }
     if (this.send_buffer.length >= 2048) {
       this.port.postMessage({ type: "raw-samples", data: this.send_buffer });

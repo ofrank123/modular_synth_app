@@ -17,7 +17,6 @@ export const RecordButton = () => {
       };
 
       recorder.onstop = (e) => {
-        const a = document.getElementById("download-link");
         const clipName = prompt("Enter a name for your clip");
         const blob = new Blob(chunks.current, {
           type: "audio/ogg; codecs=opus",
@@ -29,12 +28,16 @@ export const RecordButton = () => {
           download: clipName ?? "clip",
           href: blobUrl,
         });
-        a!.click();
         //@ts-ignore
-        window.URL.revokeObjectURL(blobUrl);
+        //window.URL.revokeObjectURL(blobUrl);
       };
     }
   }, [recorder]);
+
+  useEffect(() => {
+    const a = document.getElementById("download-link");
+    a!.click();
+  }, [downloadData]);
 
   const toggleRecording = useCallback(() => {
     if (recorder) {

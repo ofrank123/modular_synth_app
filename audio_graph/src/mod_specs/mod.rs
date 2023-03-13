@@ -1,18 +1,20 @@
 use serde::Serialize;
 use ts_rs::TS;
 
+mod delay;
 mod lfo;
 mod math;
 mod oscillator;
 mod shq;
 
+use delay::create_delay_spec;
 use lfo::create_lfo_spec;
 use math::create_math_spec;
 use oscillator::create_oscillator_spec;
 use shq::create_shq_spec;
 
 use crate::{
-    node::{LfoNode, MathNode, OscNode, ShqNode},
+    node::{DelayNode, LfoNode, MathNode, OscNode, ShqNode},
     BoxedNode, Node,
 };
 
@@ -26,9 +28,10 @@ pub fn get_serialized_specs() -> String {
     let math_spec = create_math_spec();
     let lfo_spec = create_lfo_spec();
     let shq_spec = create_shq_spec();
+    let delay_spec = create_delay_spec();
 
     serde_json::to_string(&AllModules {
-        data: vec![osc_spec, math_spec, lfo_spec, shq_spec],
+        data: vec![osc_spec, math_spec, lfo_spec, shq_spec, delay_spec],
     })
     .unwrap()
 }
@@ -39,7 +42,8 @@ pub fn new_mod(t_name: &str, mod_params: ModParams) -> BoxedNode {
         "math" => BoxedNode::new(MathNode::new()),
         "oscillator" => BoxedNode::new(OscNode::new(mod_params.sample_rate)),
         "lfo" => BoxedNode::new(LfoNode::new(mod_params.sample_rate)),
-        "shq" => BoxedNode::new(ShqNode::new(mod_params.sample_rate)),
+        "Sample and Hold" => BoxedNode::new(ShqNode::new(mod_params.sample_rate)),
+        "delay" => BoxedNode::new(DelayNode::new(mod_params.sample_rate)),
         _ => panic!("No such module"),
     }
 }

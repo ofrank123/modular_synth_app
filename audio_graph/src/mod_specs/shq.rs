@@ -2,7 +2,7 @@ use crate::*;
 
 pub fn create_shq_spec() -> Module {
     Module {
-        name: "shq",
+        name: "Sample and Hold",
         rows: vec![
             Row {
                 input: None,
