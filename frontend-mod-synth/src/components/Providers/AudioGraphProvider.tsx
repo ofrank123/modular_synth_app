@@ -3,9 +3,14 @@ import { useCallback } from "react";
 import { useState } from "react";
 import { Connection } from "../../util/Connection";
 import { ModuleData } from "../../util/ModuleData";
+import { Transform } from "../Modules";
 
 export const ModulesContext = createContext<ModuleData[]>([]);
 export const ConnectionsContext = createContext<Connection[]>([]);
+export const TranslateContext = createContext<Transform>({
+  translate: { x: 0, y: 0 },
+  scale: 1,
+});
 export const GraphDispatchContext = createContext<
   (
     msg:
@@ -21,6 +26,10 @@ export const GraphDispatchContext = createContext<
             id: string;
           };
         }
+      | {
+          type: "translate";
+          data: Transform;
+        }
   ) => void
 >(() => console.log("No context"));
 
@@ -31,6 +40,10 @@ export const AudioGraphProvider = ({
 }): JSX.Element => {
   const [modules, setModules] = useState<ModuleData[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [transform, setTransform] = useState<Transform>({
+    translate: { x: 0, y: 0 },
+    scale: 1,
+  });
 
   const dispatch: React.ContextType<typeof GraphDispatchContext> = useCallback(
     (msg) => {
@@ -41,13 +54,22 @@ export const AudioGraphProvider = ({
       } else if (msg.type === "updateModule") {
         setModules((oldModules) =>
           oldModules.map((mod) =>
-            mod.id === msg.data.id ? { ...mod, ...msg.data.modData } : mod
+            mod.id === msg.data.id
+              ? {
+                  ...mod,
+                  ...msg.data.modData,
+                  x_pos: mod.x_pos + (msg.data.modData.x_pos ?? 0),
+                  y_pos: mod.y_pos + (msg.data.modData.y_pos ?? 0),
+                }
+              : mod
           )
         );
       } else if (msg.type === "removeConnection") {
         setConnections((oldConns) =>
           oldConns.filter((value) => value.id !== msg.data.id)
         );
+      } else if (msg.type === "translate") {
+        setTransform(msg.data);
       }
     },
     [setModules, setConnections]
@@ -56,9 +78,11 @@ export const AudioGraphProvider = ({
   return (
     <ModulesContext.Provider value={modules}>
       <ConnectionsContext.Provider value={connections}>
-        <GraphDispatchContext.Provider value={dispatch}>
-          {children}
-        </GraphDispatchContext.Provider>
+        <TranslateContext.Provider value={transform}>
+          <GraphDispatchContext.Provider value={dispatch}>
+            {children}
+          </GraphDispatchContext.Provider>
+        </TranslateContext.Provider>
       </ConnectionsContext.Provider>
     </ModulesContext.Provider>
   );

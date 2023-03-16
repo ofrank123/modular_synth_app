@@ -23,11 +23,7 @@ export const ModuleHeader = ({
       e.stopPropagation();
       const mouseMoveListener = (e: MouseEvent) => {
         e.stopPropagation();
-        moveModule(
-          modId,
-          posRef.current.x_pos + e.movementX,
-          posRef.current.y_pos + e.movementY
-        );
+        moveModule(modId, e.movementX, e.movementY);
       };
 
       const removeListeners = () => {

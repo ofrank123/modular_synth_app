@@ -131,7 +131,7 @@ const RowEl = ({ id, el }: { id: string; el: RowElement }) => {
   }
 };
 
-export const GenericMod = ({
+const UnwrappedGenericMod = ({
   modData: { id, type },
 }: GenericModProps): JSX.Element => {
   const { moduleSpecs } = useModuleSpecs();
@@ -160,3 +160,5 @@ export const GenericMod = ({
     </ModuleBody>
   );
 };
+
+export const GenericMod = React.memo(UnwrappedGenericMod);

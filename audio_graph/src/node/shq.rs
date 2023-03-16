@@ -11,6 +11,7 @@ pub struct ShqNode {
 
 impl ShqNode {
     const OUT_PORTS: [u32; 1] = [0];
+    const IN_PORTS: [u32; 1] = [0];
 
     pub fn new(sample_rate: f64) -> Self {
         return ShqNode {
@@ -25,6 +26,10 @@ impl ShqNode {
 impl Node for ShqNode {
     fn get_output_ports(&self) -> &[u32] {
         &Self::OUT_PORTS
+    }
+
+    fn get_input_ports(&self) -> &[u32] {
+        &Self::IN_PORTS
     }
 
     fn get_port(&self, name: &str, port_type: super::PortType) -> u32 {

@@ -5,6 +5,7 @@ use super::{ParamValue, PortType, NO_PORT};
 #[derive(Debug)]
 pub struct MathInput<'a> {
     buffers: &'a [Buffer],
+    av_buffers: &'a [Buffer],
     connected: bool,
 }
 
@@ -15,6 +16,8 @@ pub struct MathNode {
 
 impl MathNode {
     const OUT_PORTS: [u32; 5] = [0, 1, 2, 3, 4];
+    const IN_PORTS: [u32; 8] = [0, 1, 2, 3, 4, 5, 6, 7];
+
     pub fn new() -> Self {
         MathNode {
             p_attenuverters: [0.0, 0.0, 0.0, 0.0],
@@ -56,12 +59,20 @@ impl Node for MathNode {
         &Self::OUT_PORTS
     }
 
+    fn get_input_ports(&self) -> &[u32] {
+        &Self::IN_PORTS
+    }
+
     fn get_port(&self, name: &str, port_type: super::PortType) -> u32 {
         match (port_type, name) {
             (PortType::In, "In 1") => 0,
             (PortType::In, "In 2") => 1,
             (PortType::In, "In 3") => 2,
             (PortType::In, "In 4") => 3,
+            (PortType::In, "AV 1") => 4,
+            (PortType::In, "AV 2") => 5,
+            (PortType::In, "AV 3") => 6,
+            (PortType::In, "AV 4") => 7,
             (PortType::Out, "Out 1") => 0,
             (PortType::Out, "Out 2") => 1,
             (PortType::Out, "Out 3") => 2,
@@ -73,16 +84,19 @@ impl Node for MathNode {
 
     fn process(&mut self, inputs: &super::InputPorts, output: &mut super::OutputPorts) {
         // Get input buffers
-        let input_bufs: [MathInput; 4] = [0, 1, 2, 3].map(|n| match inputs.get(&n) {
-            Some(input) => MathInput {
-                buffers: input.buffers(),
-                connected: true,
-            },
-            None => MathInput {
-                buffers: &[Buffer::SILENT],
-                connected: false,
-            },
-        });
+        let input_bufs: [MathInput; 4] =
+            [0, 1, 2, 3].map(|n| match (inputs.get(&n), inputs.get(&(n + 4))) {
+                (Some(input), Some(av_input)) => MathInput {
+                    buffers: input.buffers(),
+                    av_buffers: av_input.buffers(),
+                    connected: true,
+                },
+                (_, _) => MathInput {
+                    buffers: &[Buffer::SILENT],
+                    av_buffers: &[Buffer::SILENT],
+                    connected: false,
+                },
+            });
 
         // Get the outpus
         let mut outputs: [&mut Vec<Buffer>; 5] =
@@ -116,13 +130,15 @@ impl Node for MathNode {
                 ]);
 
                 // Loop through channels of the inputs and outputs, which should at this point all be the same number
-                for (sum_output, (out_buffer, in_buffer)) in sum_output
-                    .iter_mut()
-                    .zip(av_output.iter_mut().zip(input.buffers))
-                {
+                for (sum_output, (out_buffer, (in_buffer, av_buffer))) in sum_output.iter_mut().zip(
+                    av_output
+                        .iter_mut()
+                        .zip(input.buffers.iter().zip(input.av_buffers)),
+                ) {
                     for i in 0..Buffer::LEN {
                         // Calculate next sample
-                        let sample = self.get_av_value(n, i) * in_buffer[i];
+                        let sample = (self.get_av_value(n, i) + av_buffer[i]).clamp(-1.0, 1.0)
+                            * in_buffer[i];
                         // Set attenuverting output
                         out_buffer[i] = sample;
                         // Add to summing output

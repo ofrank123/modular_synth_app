@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import styles from "./Modules.module.scss";
 import { Module } from "./Module";
-import { useModules } from "../../hooks/audioGraph";
+import { useModules, useUpdateGraph } from "../../hooks/audioGraph";
 import { ConnectionDrawer } from "./ConnectionDrawer";
 import { Controls } from "../Controls";
 import { GraphDispatchContext } from "../Providers/AudioGraphProvider";
@@ -23,6 +23,7 @@ export interface Transform {
 
 export const ModuleArea = (): JSX.Element => {
   const modules = useModules();
+  const { translate } = useUpdateGraph();
   const [areaTransform, setAreaTransform] = useState<Transform>({
     translate: { x: 0, y: 0 },
     scale: 1,
@@ -36,8 +37,8 @@ export const ModuleArea = (): JSX.Element => {
       if (mouseDown) {
         setAreaTransform(({ translate: { x: oldX, y: oldY }, scale }) => ({
           translate: {
-            x: oldX + (event.clientX - prevMousePos.current.x),
-            y: oldY + (event.clientY - prevMousePos.current.y),
+            x: oldX + (event.clientX - prevMousePos.current.x) / scale,
+            y: oldY + (event.clientY - prevMousePos.current.y) / scale,
           },
           scale,
         }));
@@ -63,6 +64,10 @@ export const ModuleArea = (): JSX.Element => {
     },
     [setAreaTransform]
   );
+
+  useEffect(() => {
+    translate(areaTransform);
+  }, [translate, areaTransform]);
 
   return (
     <div style={{ display: "flex" }}>

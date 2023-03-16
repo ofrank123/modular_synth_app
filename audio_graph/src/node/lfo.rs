@@ -22,6 +22,8 @@ struct Lfo {
     base_freq: f32,
     freq_offset: f32,
     lfo_type: LFOType,
+    pulse_width: f32,
+    pulse_width_offset: f32,
     rng: StdRng,
 }
 
@@ -33,6 +35,8 @@ impl Lfo {
             base_freq: 10.0,
             freq_offset: 0.0,
             lfo_type: LFOType::Sine,
+            pulse_width: 0.5,
+            pulse_width_offset: 0.0,
             rng: StdRng::seed_from_u64(0),
         };
     }
@@ -44,7 +48,10 @@ impl Lfo {
     fn next(&mut self) -> f32 {
         let sample = match self.lfo_type {
             LFOType::Sine => sine_sample(self.phase),
-            LFOType::Square => naive_square_sample(self.phase),
+            LFOType::Square => naive_square_sample(
+                self.phase,
+                (self.pulse_width + self.pulse_width_offset).clamp(0.0, 1.0),
+            ),
             LFOType::Saw => naive_saw_sample(self.phase),
             LFOType::Triangle => naive_tri_sample(self.phase),
             LFOType::Noise => {
@@ -73,6 +80,7 @@ pub struct LfoNode {
 
 impl LfoNode {
     const OUT_PORTS: [u32; 1] = [0];
+    const IN_PORTS: [u32; 2] = [0, 1];
     pub fn new(sample_rate: f64) -> Self {
         LfoNode {
             lfo: Lfo::new(sample_rate as f32),
@@ -84,6 +92,7 @@ impl Node for LfoNode {
     fn update_param(&mut self, name: &str, param: ParamValue) {
         match (name, param) {
             ("base_pitch", ParamValue::Num(n)) => self.lfo.base_freq = n,
+            ("pulse_width", ParamValue::Num(n)) => self.lfo.pulse_width = n,
             ("type", ParamValue::Str(s)) => match s.as_str() {
                 "sine" => self.lfo.lfo_type = LFOType::Sine,
                 "square" => self.lfo.lfo_type = LFOType::Square,
@@ -100,10 +109,15 @@ impl Node for LfoNode {
         &Self::OUT_PORTS
     }
 
+    fn get_input_ports(&self) -> &[u32] {
+        &Self::IN_PORTS
+    }
+
     fn get_port(&self, name: &str, port_type: super::PortType) -> u32 {
         match (port_type, name) {
             (PortType::Out, "Audio") => 0,
             (PortType::In, "Frequency") => 0,
+            (PortType::In, "Pulse Width") => 1,
             (t, n) => port_panic!(t, n),
         }
     }
@@ -114,10 +128,16 @@ impl Node for LfoNode {
             None => &Buffer::SILENT,
         };
 
+        let pulse_in = match inputs.get(&1) {
+            Some(n) => &n.buffers()[0],
+            None => &Buffer::SILENT,
+        };
+
         let output_bufs = output.get_mut(&0).expect(NO_PORT);
 
         for buffer in output_bufs {
             for i in 0..Buffer::LEN {
+                self.lfo.pulse_width_offset = pulse_in[i];
                 self.lfo.freq_offset = freq_in[i] * 100.0;
                 let next_sample = self.lfo.next();
                 buffer[i] = next_sample;

@@ -23,6 +23,24 @@ pub fn create_lfo_spec() -> Module {
                 ],
             },
             Row {
+                input: Some("Pulse Width"),
+                output: None,
+                elements: vec![
+                    RowElement::Text(Text {
+                        data: "Pulse Width",
+                        justify: Justify::Left,
+                    }),
+                    RowElement::Slider(Slider {
+                        steps: 100,
+                        order: 1,
+                        range: 1.0,
+                        inverts: false,
+                        default: 0.5,
+                        parameter: "pulse_width",
+                    }),
+                ],
+            },
+            Row {
                 input: None,
                 output: None,
                 elements: vec![

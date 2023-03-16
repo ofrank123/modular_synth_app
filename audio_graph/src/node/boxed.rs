@@ -48,6 +48,9 @@ impl Node for BoxedNode {
     fn get_output_ports(&self) -> &[u32] {
         self.0.get_output_ports()
     }
+    fn get_input_ports(&self) -> &[u32] {
+        self.0.get_input_ports()
+    }
     fn get_port(&self, name: &str, port_type: PortType) -> u32 {
         self.0.get_port(name, port_type)
     }
@@ -59,6 +62,9 @@ impl Node for BoxedNode {
 impl Node for BoxedNodeSend {
     fn get_output_ports(&self) -> &[u32] {
         self.0.get_output_ports()
+    }
+    fn get_input_ports(&self) -> &[u32] {
+        self.0.get_input_ports()
     }
     fn get_port(&self, name: &str, port_type: PortType) -> u32 {
         self.0.get_port(name, port_type)

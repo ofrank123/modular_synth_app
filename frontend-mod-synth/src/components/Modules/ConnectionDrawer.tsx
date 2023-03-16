@@ -5,6 +5,7 @@ import styles from "./Modules.module.scss";
 import { useReqRemoveConnection } from "../../hooks/engineMessages";
 import { useNodeConnector } from "../../hooks/nodeConnector";
 import type { Transform } from "../Modules";
+import { useModuleSpecs } from "../../hooks/moduleSpec";
 
 interface ConnectionProps {
   connection: Connection;
@@ -166,6 +167,7 @@ export const ConnectionDrawer = ({
   transform: Transform;
 }): JSX.Element => {
   const connections = useConnections();
+  const rr = useModuleSpecs();
 
   const ref = useRef<SVGSVGElement | null>(null);
   const [{ offset_x, offset_y }, setOffset] = useState({
@@ -173,19 +175,23 @@ export const ConnectionDrawer = ({
     offset_y: 0,
   });
 
-  useEffect(() => {
-    const calcOffset = () => {
-      const { x, y } = ref.current?.getBoundingClientRect() || { x: 0, y: 0 };
-      setOffset({ offset_x: x, offset_y: y });
-    };
+  const calcOffset = useCallback(() => {
+    const { x, y } = ref.current?.getBoundingClientRect() || { x: 0, y: 0 };
+    setOffset({ offset_x: x, offset_y: y });
+  }, [setOffset]);
 
+  useEffect(() => {
     window.addEventListener("resize", calcOffset);
     calcOffset();
 
     return () => {
       window.removeEventListener("resize", calcOffset);
     };
-  }, []);
+  }, [calcOffset]);
+
+  useEffect(() => {
+    calcOffset();
+  }, [rr, calcOffset]);
 
   return (
     <svg ref={ref} className={styles.connectionDrawer} fill="none">

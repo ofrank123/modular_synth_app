@@ -79,6 +79,24 @@ pub fn create_oscillator_spec() -> Module {
                 ],
             },
             Row {
+                input: Some("Pulse Width"),
+                output: None,
+                elements: vec![
+                    RowElement::Text(Text {
+                        data: "Pulse Width",
+                        justify: Justify::Left,
+                    }),
+                    RowElement::Slider(Slider {
+                        order: 1,
+                        steps: 100,
+                        range: 1.0,
+                        inverts: false,
+                        default: 0.5,
+                        parameter: "pulse_width",
+                    }),
+                ],
+            },
+            Row {
                 input: None,
                 output: None,
                 elements: vec![

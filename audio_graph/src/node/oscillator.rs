@@ -28,6 +28,8 @@ struct Oscillator {
     coarse_freq_offset: f32,
     fine_freq: f32,
     fine_freq_offset: f32,
+    pulse_width: f32,
+    pulse_width_offset: f32,
     osc_type: OscType,
 }
 
@@ -47,6 +49,8 @@ impl Oscillator {
             coarse_freq_offset: 0.0,
             fine_freq: 0.0,
             fine_freq_offset: 0.0,
+            pulse_width: 0.5,
+            pulse_width_offset: 0.0,
             osc_type: OscType::Sine,
         };
     }
@@ -80,13 +84,14 @@ impl Oscillator {
                 s - poly_blep(phase_inc, t)
             }
             OscType::NSquare => {
-                let s = naive_square_sample(self.phase);
+                let s = naive_square_sample(self.phase, self.pulse_width + self.pulse_width_offset);
                 s
             }
             OscType::Square => {
-                let mut s = naive_square_sample(self.phase);
+                let pw = (self.pulse_width + self.pulse_width_offset).clamp(0.0, 1.0);
+                let mut s = naive_square_sample(self.phase, pw);
                 s += poly_blep(phase_inc, t);
-                s -= poly_blep(phase_inc, (t + 0.5).rem_euclid(1.0));
+                s -= poly_blep(phase_inc, (t + -pw).rem_euclid(1.0));
                 s
             }
             OscType::Triangle => naive_tri_sample(self.phase),
@@ -102,6 +107,8 @@ pub struct OscNode {
 
 impl OscNode {
     const OUT_PORTS: [u32; 1] = [0];
+    const IN_PORTS: [u32; 3] = [0, 1, 2];
+
     pub fn new(sample_rate: f64) -> Self {
         OscNode {
             oscillator: Oscillator::new(sample_rate as f32),
@@ -116,6 +123,7 @@ impl Node for OscNode {
             ("coarse_pitch", ParamValue::Num(n)) => self.oscillator.coarse_freq = n,
             ("fine_pitch", ParamValue::Num(n)) => self.oscillator.fine_freq = n,
             ("phase", ParamValue::Num(n)) => self.oscillator.phase_param_offset = n * 2.0 * PI,
+            ("pulse_width", ParamValue::Num(n)) => self.oscillator.pulse_width = n,
             ("type", ParamValue::Str(s)) => match s.as_str() {
                 "sine" => self.oscillator.osc_type = OscType::Sine,
                 "nsquare" => self.oscillator.osc_type = OscType::NSquare,
@@ -133,12 +141,17 @@ impl Node for OscNode {
         &Self::OUT_PORTS
     }
 
+    fn get_input_ports(&self) -> &[u32] {
+        &Self::IN_PORTS
+    }
+
     fn get_port(&self, name: &str, port_type: super::PortType) -> u32 {
         match (port_type, name) {
             (PortType::Out, "Audio") => 0,
             (PortType::In, "Coarse Pitch") => 0,
             (PortType::In, "Fine Pitch") => 1,
             (PortType::In, "Phase") => 2,
+            (PortType::In, "Pulse Width") => 3,
             (t, n) => port_panic!(t, n),
         }
     }
@@ -159,6 +172,11 @@ impl Node for OscNode {
             None => &Buffer::SILENT,
         };
 
+        let pulse_in = match inputs.get(&3) {
+            Some(n) => &n.buffers()[0],
+            None => &Buffer::SILENT,
+        };
+
         let output_bufs = output.get_mut(&0).expect(NO_PORT);
 
         for buffer in output_bufs {
@@ -166,6 +184,7 @@ impl Node for OscNode {
                 self.oscillator.coarse_freq_offset = coarse_in[i] * 12.0;
                 self.oscillator.fine_freq_offset = fine_in[i] * 100.0;
                 self.oscillator.phase_offset = phase_in[i] * 2.0 * PI;
+                self.oscillator.pulse_width_offset = pulse_in[i];
                 let next_sample = self.oscillator.next();
                 buffer[i] = next_sample;
             }

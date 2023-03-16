@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 mod boxed;
 mod delay;
+mod filter;
 mod graph;
 mod lfo;
 mod math;
@@ -14,6 +15,7 @@ mod shq;
 
 pub use boxed::{BoxedNode, BoxedNodeSend};
 pub use delay::DelayNode;
+pub use filter::FilterNode;
 pub use graph::GraphNode;
 pub use lfo::LfoNode;
 pub use math::MathNode;
@@ -65,6 +67,7 @@ impl From<String> for ParamValue {
 
 pub trait Node {
     fn get_output_ports(&self) -> &[u32];
+    fn get_input_ports(&self) -> &[u32];
     fn get_port(&self, name: &str, port_type: PortType) -> u32;
     fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts);
 
@@ -120,6 +123,9 @@ where
     fn get_output_ports(&self) -> &[u32] {
         (**self).get_output_ports()
     }
+    fn get_input_ports(&self) -> &[u32] {
+        (**self).get_input_ports()
+    }
     fn get_port(&self, name: &str, port_type: PortType) -> u32 {
         (**self).get_port(name, port_type)
     }
@@ -134,6 +140,9 @@ where
 {
     fn get_output_ports(&self) -> &[u32] {
         (**self).get_output_ports()
+    }
+    fn get_input_ports(&self) -> &[u32] {
+        (**self).get_input_ports()
     }
     fn get_port(&self, name: &str, port_type: PortType) -> u32 {
         (**self).get_port(name, port_type)

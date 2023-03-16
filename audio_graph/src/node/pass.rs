@@ -14,11 +14,16 @@ pub struct Pass;
 
 impl Pass {
     const OUT_PORTS: [u32; 1] = [0];
+    const IN_PORTS: [u32; 1] = [0];
 }
 
 impl Node for Pass {
     fn get_output_ports(&self) -> &[u32] {
         &Self::OUT_PORTS
+    }
+
+    fn get_input_ports(&self) -> &[u32] {
+        &Self::IN_PORTS
     }
 
     fn get_port(&self, name: &str, port_type: PortType) -> u32 {

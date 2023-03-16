@@ -8,6 +8,7 @@ pub struct OutputSink {
 
 impl OutputSink {
     const OUT_PORTS: [u32; 1] = [0];
+    const IN_PORTS: [u32; 1] = [0];
 
     pub fn new(output_buffer: Box<[f32]>) -> Self {
         OutputSink {
@@ -19,6 +20,9 @@ impl OutputSink {
 impl Node for OutputSink {
     fn get_output_ports(&self) -> &[u32] {
         &Self::OUT_PORTS
+    }
+    fn get_input_ports(&self) -> &[u32] {
+        &Self::IN_PORTS
     }
 
     fn get_port(&self, name: &str, port_type: super::PortType) -> u32 {

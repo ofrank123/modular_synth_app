@@ -86,6 +86,10 @@ impl Node for GraphNode {
             .get_output_ports()
     }
 
+    fn get_input_ports(&self) -> &[u32] {
+        &[]
+    }
+
     fn get_port(&self, name: &str, port_type: PortType) -> u32 {
         match port_type {
             PortType::In => match self.port_names.get(&name.to_string()) {

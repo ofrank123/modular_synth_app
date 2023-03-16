@@ -11,8 +11,8 @@ pub fn naive_tri_sample(phase: f32) -> f32 {
 }
 
 // Generate a naive square wave sample from phase
-pub fn naive_square_sample(phase: f32) -> f32 {
-    if phase < PI {
+pub fn naive_square_sample(phase: f32, pulse_width: f32) -> f32 {
+    if phase < PI * 2.0 * pulse_width {
         1.0
     } else {
         -1.0

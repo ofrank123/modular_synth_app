@@ -116,6 +116,7 @@ pub const NO_NODE: &str = "no node exists for the given index";
 pub fn process(processor: &mut Processor, graph: &mut Graph, node: <Graph as GraphBase>::NodeId) {
     processor.dfs_post_order.reset(Reversed(&*graph));
     processor.dfs_post_order.move_to(node);
+
     while let Some(n) = processor.dfs_post_order.next(Reversed(&*graph)) {
         processor.inputs.clear();
         for in_n in (&*graph).neighbors_directed(n, Incoming) {
@@ -127,12 +128,27 @@ pub fn process(processor: &mut Processor, graph: &mut Graph, node: <Graph as Gra
                         let input = node::Input::new(buffers);
                         processor.inputs.insert(*in_port, input);
                     }
-                    None => {} // No output port on in_n
+                    None => {
+                        // Feed silence if no buffers
+                        let input = node::Input::new(&[Buffer::SILENT]);
+                        processor.inputs.insert(*in_port, input);
+                    }
                 }
             }
         }
 
+        // Get node
         let data: &mut NodeData<BoxedNode> = graph.node_weight_mut(n).expect(NO_NODE);
+
+        // Ensure nodes inputs are cleared from previous runs
+        for in_port in (*data).node.get_input_ports() {
+            if !&processor.inputs.contains_key(&in_port) {
+                let input = node::Input::new(&[Buffer::SILENT]);
+                processor.inputs.insert(*in_port, input);
+            }
+        }
+
+        // Process node
         (*data)
             .node
             .process(&processor.inputs, &mut (*data).output_ports);

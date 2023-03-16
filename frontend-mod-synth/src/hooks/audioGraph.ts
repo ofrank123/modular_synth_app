@@ -1,9 +1,11 @@
 import { useCallback } from "react";
 import { useContext } from "react";
+import { Transform } from "../components/Modules";
 import {
   ConnectionsContext,
   GraphDispatchContext,
   ModulesContext,
+  TranslateContext,
 } from "../components/Providers/AudioGraphProvider";
 import { Connection } from "../util/Connection";
 import { ModuleData } from "../util/ModuleData";
@@ -12,15 +14,18 @@ import { createModule } from "../util/moduleHelpers";
 export const useModules = (): ModuleData[] => useContext(ModulesContext);
 export const useConnections = (): Connection[] =>
   useContext(ConnectionsContext);
+export const useTransform = (): Transform => useContext(TranslateContext);
 
 type AddModule = (id: string, type: ModuleData["type"]) => void;
 type AddConnection = (data: Connection) => void;
 type RemoveConnection = (data: { id: string }) => void;
+type Translate = (data: Transform) => void;
 
 export const useUpdateGraph = (): {
   addModule: AddModule;
   addConnection: AddConnection;
   removeConnection: RemoveConnection;
+  translate: Translate;
 } => {
   const dispatch = useContext(GraphDispatchContext);
 
@@ -54,20 +59,37 @@ export const useUpdateGraph = (): {
     [dispatch]
   );
 
-  return { addModule, addConnection, removeConnection };
-};
-
-type MoveModule = (id: string, x_pos: number, y_pos: number) => void;
-export const useMoveModule = (): MoveModule => {
-  const dispatch = useContext(GraphDispatchContext);
-
-  return useCallback<MoveModule>(
-    (id, x_pos, y_pos) => {
+  const translate = useCallback<Translate>(
+    (data) => {
       dispatch({
-        type: "updateModule",
-        data: { id, modData: { x_pos, y_pos } },
+        type: "translate",
+        data,
       });
     },
     [dispatch]
+  );
+
+  return { addModule, addConnection, removeConnection, translate };
+};
+
+type MoveModule = (id: string, x_diff: number, y_diff: number) => void;
+export const useMoveModule = (): MoveModule => {
+  const dispatch = useContext(GraphDispatchContext);
+  const transform = useTransform();
+
+  return useCallback<MoveModule>(
+    (id, x_diff, y_diff) => {
+      dispatch({
+        type: "updateModule",
+        data: {
+          id,
+          modData: {
+            x_pos: x_diff / transform.scale,
+            y_pos: y_diff / transform.scale,
+          },
+        },
+      });
+    },
+    [dispatch, transform]
   );
 };
