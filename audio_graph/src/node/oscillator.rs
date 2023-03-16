@@ -67,34 +67,37 @@ impl Oscillator {
         // Clip Frequency
         let freq = self.get_freq().max(0.0);
 
-        let phase_inc = ((2.0 * PI * freq) / self.sample_rate) + self.phase_offset;
+        let phase_inc = (2.0 * PI * freq) / self.sample_rate;
 
         self.phase = (self.phase + phase_inc).rem_euclid(2.0 * PI);
 
-        let t = self.phase / (2.0 * PI);
+        let offset_phase =
+            (self.phase + self.phase_param_offset + self.phase_offset).rem_euclid(2.0 * PI);
+        let t = offset_phase / (2.0 * PI);
 
         let sample = match self.osc_type {
-            OscType::Sine => sine_sample(self.phase),
+            OscType::Sine => sine_sample(offset_phase),
             OscType::NSaw => {
-                let s = naive_saw_sample(self.phase);
+                let s = naive_saw_sample(offset_phase);
                 s
             }
             OscType::Saw => {
-                let s = naive_saw_sample(self.phase);
+                let s = naive_saw_sample(offset_phase);
                 s - poly_blep(phase_inc, t)
             }
             OscType::NSquare => {
-                let s = naive_square_sample(self.phase, self.pulse_width + self.pulse_width_offset);
+                let s =
+                    naive_square_sample(offset_phase, self.pulse_width + self.pulse_width_offset);
                 s
             }
             OscType::Square => {
                 let pw = (self.pulse_width + self.pulse_width_offset).clamp(0.0, 1.0);
-                let mut s = naive_square_sample(self.phase, pw);
+                let mut s = naive_square_sample(offset_phase, pw);
                 s += poly_blep(phase_inc, t);
                 s -= poly_blep(phase_inc, (t + -pw).rem_euclid(1.0));
                 s
             }
-            OscType::Triangle => naive_tri_sample(self.phase),
+            OscType::Triangle => naive_tri_sample(offset_phase),
         };
 
         sample
