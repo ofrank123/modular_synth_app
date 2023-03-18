@@ -3,7 +3,9 @@ use core::fmt;
 use std::collections::HashMap;
 
 mod boxed;
+mod midi;
 mod delay;
+mod envelope;
 mod filter;
 mod graph;
 mod lfo;
@@ -14,7 +16,9 @@ mod pass;
 mod shq;
 
 pub use boxed::{BoxedNode, BoxedNodeSend};
+pub use midi::MidiNode;
 pub use delay::DelayNode;
+pub use envelope::EnvelopeNode;
 pub use filter::FilterNode;
 pub use graph::GraphNode;
 pub use lfo::LfoNode;
@@ -78,6 +82,12 @@ pub trait Node {
             param
         );
     }
+
+    fn midi_message(&mut self, _note_on: bool, _note: u32) {
+        console_log!(
+            "Node does not handle midi notes!"
+        )
+    }
 }
 
 pub struct Input {
@@ -86,7 +96,6 @@ pub struct Input {
 }
 
 impl Input {
-    // Constructor solely for use within the graph `process` function.
     pub(crate) fn new(slice: &[Buffer]) -> Self {
         let buffers_ptr = slice.as_ptr();
         let buffers_len = slice.len();
@@ -96,18 +105,11 @@ impl Input {
         }
     }
 
-    /// A reference to the buffers of the input node.
     pub fn buffers(&self) -> &[Buffer] {
-        // As we know that an `Input` can only be constructed during a call to the graph `process`
-        // function, we can be sure that our slice is still valid as long as the input itself is
-        // alive.
         unsafe { std::slice::from_raw_parts(self.buffers_ptr, self.buffers_len) }
     }
 }
 
-// Inputs can only be created by the `dasp_graph::process` implementation and only ever live as
-// long as the lifetime of the call to the function. Thus, it's safe to implement this so that
-// `Send` closures can be stored within the graph and sent between threads.
 unsafe impl Send for Input {}
 
 impl fmt::Debug for Input {

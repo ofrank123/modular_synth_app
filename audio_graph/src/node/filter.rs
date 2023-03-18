@@ -2,7 +2,7 @@ use crate::{port_panic, Buffer, Node};
 
 use super::{ParamValue, PortType, NO_PORT};
 
-const BUFF_SIZE: usize = 100;
+const BUFF_SIZE: usize = 20;
 
 pub struct FilterNode {
     ring_buffer: [f32; BUFF_SIZE],

@@ -16,6 +16,7 @@ pub struct AudioManager {
     message_queue_in: MessageQueue,
     output_buffer_ptr: *const f32,
     output_node_idx: NodeIndex,
+    midi_node_idxs: Vec<u32>,
     graph: Graph,
     processor: Processor,
     sample_rate: f64,
@@ -39,6 +40,7 @@ impl AudioManager {
             message_queue_in: MessageQueue::new(),
             output_buffer_ptr,
             output_node_idx: output_node_idx.into(),
+            midi_node_idxs: vec![],
             sample_rate,
             graph,
             processor,
@@ -162,6 +164,7 @@ impl AudioManager {
                 "add-module" => {
                     let mod_type = message.get_data("modType".to_string()).get_str();
 
+
                     let mod_params = ModParams {
                         sample_rate: self.sample_rate,
                     };
@@ -172,8 +175,25 @@ impl AudioManager {
                     let node_idx =
                         self.graph.add_node(NodeData::new_boxed(new_node)).index() as u32;
 
+                    if mod_type == "midi" {
+                        self.midi_node_idxs.push(node_idx);
+                    }
+
                     self.message_queue_out
                         .push(Message::node_created(node_idx, mod_type.as_str()));
+                }
+                "midi-message" => {
+                    let message_type = message.get_data("messageType".to_string()).get_str();
+                    let note = message.get_data("note".to_string()).get_flt() as u32;
+
+                    for idx in &self.midi_node_idxs {
+                        let node = &mut self.graph[NodeIndex::new(*idx as usize)].node;
+                        match message_type.as_str() {
+                            "NOTE_ON" => node.midi_message(true, note),
+                            "NOTE_OFF" => node.midi_message(false, note),
+                            _ => panic!("Unsupported Midi message")
+                        }
+                    }
                 }
                 _ => panic!("Unsupported message"),
             }

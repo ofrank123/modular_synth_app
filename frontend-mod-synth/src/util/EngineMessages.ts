@@ -21,6 +21,11 @@ export type AudioEngineMessageOut =
   | {
       type: "add-module";
       modType: string;
+    }
+  | {
+      type: "midi-message";
+      messageType: "NOTE_ON" | "NOTE_OFF";
+      note: number;
     };
 
 export type AudioEngineMessageIn =

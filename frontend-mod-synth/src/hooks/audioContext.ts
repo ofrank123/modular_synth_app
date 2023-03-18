@@ -76,7 +76,6 @@ export const useAudioContextSetup = (): {
     },
     [addModule, addConnection, removeConnection, setModuleSpecs]
   );
-
   useEffect(() => {
     if (userGestured) {
       if (node.current && ctx.current) {
@@ -104,11 +103,70 @@ export const useAudioContextSetup = (): {
   }, []);
 
   const sendMessage = useCallback((message: AudioEngineMessageOut) => {
-    console.log(message);
     if (node.current) {
       node.current.sendMessage(message);
     }
   }, []);
+
+  // MIDI setup
+
+  const onMIDIMessage = useCallback(
+    (midiMessage: any) => {
+      const type = midiMessage.data[0];
+      const note = midiMessage.data[1];
+      const velocity = midiMessage.data[2];
+
+      switch (type) {
+        case 144: {
+          if (velocity > 0) {
+            console.log(`NOTE ON: ${note}`);
+            sendMessage({
+              type: "midi-message",
+              messageType: "NOTE_ON",
+              note: note,
+            });
+          } else {
+            console.log(`NOTE OFF: ${note}`);
+            sendMessage({
+              type: "midi-message",
+              messageType: "NOTE_OFF",
+              note: note,
+            });
+          }
+          break;
+        }
+        case 128: {
+          console.log(`NOTE OFF: ${note}`);
+          sendMessage({
+            type: "midi-message",
+            messageType: "NOTE_OFF",
+            note: note,
+          });
+          break;
+        }
+      }
+    },
+    [sendMessage]
+  );
+
+  useEffect(() => {
+    //@ts-ignore
+    if (navigator.requestMIDIAccess) {
+      // Midi supported
+      const onMIDISuccess = (midiAccess: any) => {
+        for (var input of midiAccess.inputs.values()) {
+          input.onmidimessage = onMIDIMessage;
+        }
+      };
+
+      //@ts-ignore
+      navigator.requestMIDIAccess().then(onMIDISuccess, () => {
+        console.log("Could not access your MIDI devices");
+      });
+    } else {
+      console.log("Midi not supported");
+    }
+  }, [onMIDIMessage]);
 
   return {
     connected,

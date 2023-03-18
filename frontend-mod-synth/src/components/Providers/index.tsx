@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { AudioGraphProvider } from "./AudioGraphProvider";
 import { AudioProvider } from "./AudioProvider";
 import { NodeConnectorProvider } from "./NodeConnectorProvider";

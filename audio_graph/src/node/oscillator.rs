@@ -1,11 +1,8 @@
 use std::f32::consts::PI;
 
-use crate::{
-    oscillators::{
-        naive_saw_sample, naive_square_sample, naive_tri_sample, poly_blep, sine_sample,
-    },
-    port_panic, Buffer, Node,
-};
+use crate::{oscillators::{
+    naive_saw_sample, naive_square_sample, naive_tri_sample, poly_blep, sine_sample,
+}, port_panic, Buffer, Node, freq_from_midi};
 
 use super::{InputPorts, OutputPorts, ParamValue, PortType, NO_PORT};
 
@@ -24,6 +21,7 @@ struct Oscillator {
     phase_param_offset: f32,
     phase_offset: f32,
     base_freq: f32,
+    base_freq_offset: f32,
     coarse_freq: f32,
     coarse_freq_offset: f32,
     fine_freq: f32,
@@ -31,10 +29,6 @@ struct Oscillator {
     pulse_width: f32,
     pulse_width_offset: f32,
     osc_type: OscType,
-}
-
-fn freq_from_midi(midi_val: f32) -> f32 {
-    440.0 * 2.0_f32.powf((midi_val - 69.0) / 12.0)
 }
 
 impl Oscillator {
@@ -45,6 +39,7 @@ impl Oscillator {
             phase_param_offset: 0.0,
             phase_offset: 0.0,
             base_freq: 0.0,
+            base_freq_offset: 0.0,
             coarse_freq: 0.0,
             coarse_freq_offset: 0.0,
             fine_freq: 0.0,
@@ -56,7 +51,7 @@ impl Oscillator {
     }
 
     fn get_freq(&mut self) -> f32 {
-        let base_midi = (self.base_freq + 1.0) * 64.0;
+        let base_midi = ((self.base_freq + self.base_freq_offset).clamp(-1.0, 1.0) + 1.0) * 64.0;
         let coarse = (self.coarse_freq + self.coarse_freq_offset).clamp(-12.0, 12.0);
         let fine = (self.fine_freq + self.fine_freq_offset).clamp(-100.0, 100.0);
 
@@ -110,7 +105,7 @@ pub struct OscNode {
 
 impl OscNode {
     const OUT_PORTS: [u32; 1] = [0];
-    const IN_PORTS: [u32; 3] = [0, 1, 2];
+    const IN_PORTS: [u32; 5] = [0, 1, 2, 3, 4];
 
     pub fn new(sample_rate: f64) -> Self {
         OscNode {
@@ -148,9 +143,10 @@ impl Node for OscNode {
         &Self::IN_PORTS
     }
 
-    fn get_port(&self, name: &str, port_type: super::PortType) -> u32 {
+    fn get_port(&self, name: &str, port_type: PortType) -> u32 {
         match (port_type, name) {
             (PortType::Out, "Audio") => 0,
+            (PortType::In, "Base Pitch") => 4,
             (PortType::In, "Coarse Pitch") => 0,
             (PortType::In, "Fine Pitch") => 1,
             (PortType::In, "Phase") => 2,
@@ -160,6 +156,11 @@ impl Node for OscNode {
     }
 
     fn process(&mut self, inputs: &InputPorts, output: &mut OutputPorts) {
+        let base_in = match inputs.get(&4) {
+            Some(n) => &n.buffers()[0],
+            None => &Buffer::SILENT,
+        };
+
         let coarse_in = match inputs.get(&0) {
             Some(n) => &n.buffers()[0],
             None => &Buffer::SILENT,
@@ -184,6 +185,7 @@ impl Node for OscNode {
 
         for buffer in output_bufs {
             for i in 0..Buffer::LEN {
+                self.oscillator.base_freq_offset = base_in[i];
                 self.oscillator.coarse_freq_offset = coarse_in[i] * 12.0;
                 self.oscillator.fine_freq_offset = fine_in[i] * 100.0;
                 self.oscillator.phase_offset = phase_in[i] * 2.0 * PI;

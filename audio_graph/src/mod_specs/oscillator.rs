@@ -7,7 +7,7 @@ pub fn create_oscillator_spec() -> Module {
         name: "oscillator",
         rows: vec![
             Row {
-                input: None,
+                input: Some("Base Pitch"),
                 output: None,
                 elements: vec![
                     RowElement::Text(Text {
