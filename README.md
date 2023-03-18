@@ -1,1 +1,1 @@
-# CS4099 Generative Music App
+# CS4099 -- Senior Honours Project
