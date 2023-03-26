@@ -123,15 +123,25 @@ impl AudioManager {
                     let edge_idx = message
                         .get_data("id".to_string())
                         .get_str()
-                        .parse::<usize>()
-                        .expect("Could not parse edge id")
-                        as u32;
+                        .parse::<u32>()
+                        .expect("Could not parse edge id");
 
                     audio_graph::remove_graph_edge(&mut self.graph, edge_idx);
 
                     // Can't use send_message, because it borrows all of self
                     self.message_queue_out
                         .push(Message::connection_removed(edge_idx))
+                }
+                "remove-node" => {
+                    let node_idx = message
+                        .get_data("id".to_string())
+                        .get_str()
+                        .parse::<u32>()
+                        .expect("Could not parse node id");
+
+                    audio_graph::remove_graph_node(&mut self.graph, node_idx);
+
+                    self.message_queue_out.push(Message::node_removed(node_idx));
                 }
                 "add-connection" => {
                     let in_node_idx = message
@@ -164,7 +174,6 @@ impl AudioManager {
                 "add-module" => {
                     let mod_type = message.get_data("modType".to_string()).get_str();
 
-
                     let mod_params = ModParams {
                         sample_rate: self.sample_rate,
                     };
@@ -191,7 +200,7 @@ impl AudioManager {
                         match message_type.as_str() {
                             "NOTE_ON" => node.midi_message(true, note),
                             "NOTE_OFF" => node.midi_message(false, note),
-                            _ => panic!("Unsupported Midi message")
+                            _ => panic!("Unsupported Midi message"),
                         }
                     }
                 }

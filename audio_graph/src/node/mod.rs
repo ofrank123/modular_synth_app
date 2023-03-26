@@ -3,26 +3,28 @@ use core::fmt;
 use std::collections::HashMap;
 
 mod boxed;
-mod midi;
+mod clockdiv;
 mod delay;
 mod envelope;
 mod filter;
 mod graph;
 mod lfo;
 mod math;
+mod midi;
 mod oscillator;
 mod output;
 mod pass;
 mod shq;
 
 pub use boxed::{BoxedNode, BoxedNodeSend};
-pub use midi::MidiNode;
+pub use clockdiv::ClockDivNode;
 pub use delay::DelayNode;
 pub use envelope::EnvelopeNode;
 pub use filter::FilterNode;
 pub use graph::GraphNode;
 pub use lfo::LfoNode;
 pub use math::MathNode;
+pub use midi::MidiNode;
 pub use oscillator::OscNode;
 pub use output::OutputSink;
 pub use pass::Pass;
@@ -84,9 +86,7 @@ pub trait Node {
     }
 
     fn midi_message(&mut self, _note_on: bool, _note: u32) {
-        console_log!(
-            "Node does not handle midi notes!"
-        )
+        console_log!("Node does not handle midi notes!")
     }
 }
 

@@ -26,6 +26,10 @@ export type AudioEngineMessageOut =
       type: "midi-message";
       messageType: "NOTE_ON" | "NOTE_OFF";
       note: number;
+    }
+  | {
+      type: "remove-node";
+      id: string;
     };
 
 export type AudioEngineMessageIn =
@@ -53,4 +57,8 @@ export type AudioEngineMessageIn =
   | {
       type: "connection-removed";
       edge_id: number;
+    }
+  | {
+      type: "node-removed";
+      node_id: number;
     };

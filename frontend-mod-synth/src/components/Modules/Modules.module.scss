@@ -1,10 +1,10 @@
 .modArea {
     background-color: $bg-light;
     position: relative;
-    width: 1200px;
-    height: 600px;
-    margin-left: auto;
+    width: 100%;
+    height: 75vh;
     margin-right: auto;
+    margin-bottom: 1rem;
     overflow: hidden;
 }
 
@@ -25,6 +25,7 @@
     border-top-left-radius: $border-radius-inner;
     border-top-right-radius: $border-radius-inner;
     display: flex;
+    justify-content: space-between;
     cursor: pointer;
     &:active {
         cursor: move;

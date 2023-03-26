@@ -1,4 +1,4 @@
-import React, { createContext } from "react";
+import React, { createContext, useEffect, useRef } from "react";
 import { useCallback } from "react";
 import { useState } from "react";
 import { Connection } from "../../util/Connection";
@@ -27,6 +27,12 @@ export const GraphDispatchContext = createContext<
           };
         }
       | {
+          type: "removeNode";
+          data: {
+            id: string;
+          };
+        }
+      | {
           type: "translate";
           data: Transform;
         }
@@ -45,10 +51,27 @@ export const AudioGraphProvider = ({
     scale: 1,
   });
 
+  const transformRef = useRef<Transform>(transform);
+
+  useEffect(() => {
+    transformRef.current = transform;
+  }, [transform]);
+
   const dispatch: React.ContextType<typeof GraphDispatchContext> = useCallback(
     (msg) => {
       if (msg.type === "addModule") {
-        setModules((oldModules) => [...oldModules, msg.data]);
+        setModules((oldModules) => [
+          ...oldModules,
+          {
+            ...msg.data,
+            x_pos:
+              (msg.data.x_pos - transformRef.current.translate.x) *
+              transformRef.current.scale,
+            y_pos:
+              (msg.data.y_pos - transformRef.current.translate.y) *
+              transformRef.current.scale,
+          },
+        ]);
       } else if (msg.type === "addConnection") {
         setConnections((oldConns) => [...oldConns, msg.data]);
       } else if (msg.type === "updateModule") {
@@ -67,6 +90,16 @@ export const AudioGraphProvider = ({
       } else if (msg.type === "removeConnection") {
         setConnections((oldConns) =>
           oldConns.filter((value) => value.id !== msg.data.id)
+        );
+      } else if (msg.type === "removeNode") {
+        setConnections((oldConns) =>
+          oldConns.filter(
+            (value) =>
+              value.in_node !== msg.data.id && value.out_node !== msg.data.id
+          )
+        );
+        setModules((oldModules) =>
+          oldModules.filter((value) => value.id !== msg.data.id)
         );
       } else if (msg.type === "translate") {
         setTransform(msg.data);

@@ -11,7 +11,6 @@ import { Module } from "./Module";
 import { useModules, useUpdateGraph } from "../../hooks/audioGraph";
 import { ConnectionDrawer } from "./ConnectionDrawer";
 import { Controls } from "../Controls";
-import { GraphDispatchContext } from "../Providers/AudioGraphProvider";
 
 export interface Transform {
   translate: {
@@ -71,7 +70,6 @@ export const ModuleArea = (): JSX.Element => {
 
   return (
     <div style={{ display: "flex" }}>
-      <Controls />
       <div
         onMouseDown={() => setMouseDown(true)}
         onMouseUp={() => setMouseDown(false)}
@@ -79,6 +77,7 @@ export const ModuleArea = (): JSX.Element => {
         onWheel={(e) => handleWheel(e)}
         className={styles.modArea}
       >
+        <ConnectionDrawer transform={areaTransform} />
         <div
           style={{
             transform: `scale(${areaTransform.scale}) translate(${areaTransform.translate.x}px, ${areaTransform.translate.y}px)`,
@@ -88,7 +87,6 @@ export const ModuleArea = (): JSX.Element => {
             <Module key={modData.id} moduleData={modData} />
           ))}
         </div>
-        <ConnectionDrawer transform={areaTransform} />
       </div>
     </div>
   );

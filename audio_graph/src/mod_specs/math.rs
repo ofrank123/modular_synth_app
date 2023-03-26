@@ -5,14 +5,20 @@ macro_rules! get_av_row {
         Row {
             input: Some(concat!("AV ", $idx)),
             output: None,
-            elements: vec![RowElement::Slider(Slider {
-                steps: 100,
-                order: 4,
-                range: 1.0,
-                inverts: true,
-                default: 0.0,
-                parameter: concat!("attenuverter", $idx),
-            })],
+            elements: vec![
+                RowElement::Text(Text {
+                    data: concat!("Mix ", $idx),
+                    justify: Justify::Left,
+                }),
+                RowElement::Slider(Slider {
+                    steps: 100,
+                    order: 3,
+                    range: 1.0,
+                    inverts: true,
+                    default: 0.0,
+                    parameter: concat!("attenuverter", $idx),
+                }),
+            ],
         }
     }};
 }

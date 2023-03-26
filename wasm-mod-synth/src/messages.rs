@@ -169,6 +169,13 @@ impl Message {
         }
     }
 
+    pub fn node_removed(node_id: u32) -> Self {
+        Message {
+            name: "node_removed".into(),
+            data: HashMap::from([("node_id".to_string(), node_id.into())]),
+        }
+    }
+
     pub fn connection_removed(edge_id: u32) -> Self {
         Message {
             name: "connection_removed".into(),

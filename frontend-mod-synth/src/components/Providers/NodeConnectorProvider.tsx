@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useState } from "react";
 import { useAudioContext } from "../../hooks/audioContext";
-import { useConnections } from "../../hooks/audioGraph";
+import { useConnections, useModules } from "../../hooks/audioGraph";
 
 interface NodeConnectorProps {
   children: React.ReactNode;
@@ -28,6 +28,7 @@ export const NodeConnectorProvider = ({
   const { sendMessage } = useAudioContext();
   const [start, setStart] = useState<NodeConnectorContextI["start"]>(null);
   const connections = useConnections();
+  const nodes = useModules();
 
   const windowClickListener = useCallback(() => {
     setStart(null);
@@ -40,7 +41,6 @@ export const NodeConnectorProvider = ({
         setStart({ node, port, type });
         window.addEventListener("click", windowClickListener);
       } else {
-        window.removeEventListener("click", windowClickListener);
         if (start.type !== type) {
           // start.type === OUT
           let [out_node, out_port, in_node, in_port] = [
@@ -60,14 +60,17 @@ export const NodeConnectorProvider = ({
 
           // Only add if there's no existing connection
           if (
+            nodes.findIndex((value) => value.id === out_node) !== -1 &&
+            nodes.findIndex((value) => value.id === in_node) !== -1 &&
             connections.findIndex(
               (value) =>
                 value.out_node === out_node &&
                 value.out_port === out_port &&
                 value.in_node === in_node &&
                 value.in_port === in_port
-            ) == -1
+            ) === -1
           ) {
+            window.removeEventListener("click", windowClickListener);
             sendMessage({
               type: "add-connection",
               out_node,
@@ -80,7 +83,7 @@ export const NodeConnectorProvider = ({
         }
       }
     },
-    [start, setStart, sendMessage, windowClickListener, connections]
+    [start, setStart, sendMessage, windowClickListener, connections, nodes]
   );
 
   return (

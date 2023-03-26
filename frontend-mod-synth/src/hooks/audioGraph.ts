@@ -19,12 +19,14 @@ export const useTransform = (): Transform => useContext(TranslateContext);
 type AddModule = (id: string, type: ModuleData["type"]) => void;
 type AddConnection = (data: Connection) => void;
 type RemoveConnection = (data: { id: string }) => void;
+type RemoveNode = (data: { id: string }) => void;
 type Translate = (data: Transform) => void;
 
 export const useUpdateGraph = (): {
   addModule: AddModule;
   addConnection: AddConnection;
   removeConnection: RemoveConnection;
+  removeNode: RemoveNode;
   translate: Translate;
 } => {
   const dispatch = useContext(GraphDispatchContext);
@@ -59,6 +61,16 @@ export const useUpdateGraph = (): {
     [dispatch]
   );
 
+  const removeNode = useCallback<RemoveConnection>(
+    (data) => {
+      dispatch({
+        type: "removeNode",
+        data,
+      });
+    },
+    [dispatch]
+  );
+
   const translate = useCallback<Translate>(
     (data) => {
       dispatch({
@@ -69,7 +81,7 @@ export const useUpdateGraph = (): {
     [dispatch]
   );
 
-  return { addModule, addConnection, removeConnection, translate };
+  return { addModule, addConnection, removeConnection, removeNode, translate };
 };
 
 type MoveModule = (id: string, x_diff: number, y_diff: number) => void;

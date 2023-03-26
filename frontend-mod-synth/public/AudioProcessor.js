@@ -120,6 +120,12 @@ export class AudioProcessor extends AudioWorkletProcessor {
           edge_id: message.get_data("edge_id").get_flt(),
         });
       },
+      node_removed: () => {
+        this.port.postMessage({
+          type: "node-removed",
+          node_id: message.get_data("node_id").get_flt(),
+        });
+      },
     };
 
     handlers[message.get_name()]();

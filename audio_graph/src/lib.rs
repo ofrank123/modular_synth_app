@@ -6,7 +6,7 @@ pub use buffer::Buffer;
 pub use node::{Input, Node};
 use node::{OutputPorts, PortType};
 use petgraph::data::DataMap;
-use petgraph::stable_graph::EdgeIndex;
+use petgraph::stable_graph::{EdgeIndex, NodeIndex};
 use petgraph::visit::{DfsPostOrder, GraphBase, Reversed, Visitable};
 use petgraph::Incoming;
 
@@ -61,6 +61,10 @@ pub fn remove_graph_edge(graph: &mut Graph, edge_id: u32) {
     graph.remove_edge(EdgeIndex::new(edge_id as usize));
 }
 
+pub fn remove_graph_node(graph: &mut Graph, node_id: u32) {
+    graph.remove_node(NodeIndex::new(node_id as usize));
+}
+
 pub struct Processor {
     // State related to the traversal of the audio graph starting from the output node.
     dfs_post_order: DfsPostOrder<<Graph as GraphBase>::NodeId, <Graph as Visitable>::Map>,
@@ -113,6 +117,7 @@ impl NodeData<BoxedNode> {
 
 pub const NO_NODE: &str = "no node exists for the given index";
 
+// Main processing function
 pub fn process(processor: &mut Processor, graph: &mut Graph, node: <Graph as GraphBase>::NodeId) {
     processor.dfs_post_order.reset(Reversed(&*graph));
     processor.dfs_post_order.move_to(node);

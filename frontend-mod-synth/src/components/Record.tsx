@@ -62,13 +62,13 @@ export const RecordButton = () => {
   }, [recorder]);
 
   return (
-    <div>
+    <>
       <button onClick={() => toggleRecording()}>
         {!recording ? "Start Recording" : "Stop Recording"}
       </button>
       <a id="download-link" style={{ display: "none" }} {...downloadData}>
         Download Clip
       </a>
-    </div>
+    </>
   );
 };

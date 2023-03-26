@@ -22,7 +22,7 @@ export const Oscilloscope = (): JSX.Element => {
     const c = canvasEl.current?.getContext("2d");
     if (canvas && c) {
       canvas.style.width = "100%";
-      canvas.style.height = "100%";
+      canvas.style.height = "20vh";
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       c.fillStyle = "#181818";

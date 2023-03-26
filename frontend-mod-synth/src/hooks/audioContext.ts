@@ -41,7 +41,8 @@ export const useAudioContextSetup = (): {
   const node = useRef<CustomWorkletNode | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
 
-  const { addConnection, addModule, removeConnection } = useUpdateGraph();
+  const { addConnection, addModule, removeConnection, removeNode } =
+    useUpdateGraph();
 
   const { setModuleSpecs } = useModuleSpecs();
 
@@ -72,9 +73,13 @@ export const useAudioContextSetup = (): {
         removeConnection({
           id: message.edge_id.toString(),
         });
+      } else if (message.type == "node-removed") {
+        removeNode({
+          id: message.node_id.toString(),
+        });
       }
     },
-    [addModule, addConnection, removeConnection, setModuleSpecs]
+    [addModule, addConnection, removeConnection, removeNode, setModuleSpecs]
   );
   useEffect(() => {
     if (userGestured) {
